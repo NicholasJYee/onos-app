@@ -1,0 +1,66 @@
+{
+  "name": "Consult Note (French)",
+  "description": "Scribe ambiant assisté par IA pour consultations orthopédiques",
+  "sections": [
+    {
+      "title": "Informations sur le patient",
+      "instruction": "Inclure uniquement si explicitement mentionnés : Nom, Âge, Sexe, Adresse, Coordonnées.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Motif de consultation (MC) ou Durée du suivi",
+      "instruction": "Raison principale de la consultation ou durée du suivi depuis le dernier rendez-vous. Obligatoire si mentionné.",
+      "format": "string"
+    },
+    {
+      "title": "Histoire de la maladie actuelle (HMA)",
+      "instruction": "Description chronologique des symptômes, début, durée, sévérité, facteurs modificateurs et contexte pertinent. Pour les visites de suivi, se concentrer uniquement sur les changements survenus depuis la dernière consultation.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Revue des systèmes (RDS)",
+      "instruction": "Inclure uniquement les systèmes explicitement abordés et pertinents par rapport au motif de consultation.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Antécédents médicaux (AM)",
+      "instruction": "Documenter uniquement si spécifiquement mentionnés. Omettre lors des visites de suivi sauf si discutés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Médicaments actuels et allergies",
+      "instruction": "Lister les médicaments et allergies uniquement s’ils sont explicitement mentionnés. Omettre lors des visites de suivi sauf en cas de modification ou de discussion.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Antécédents familiaux et sociaux",
+      "instruction": "Inclure uniquement si explicitement mentionnés. Omettre lors des visites de suivi sauf si discutés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Signes vitaux",
+      "instruction": "Inclure uniquement s’ils sont documentés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Résultats de l’examen physique",
+      "instruction": "Constatations cliniques objectives organisées par système telles que documentées.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Résultats biologiques / Imagerie",
+      "instruction": "Inclure uniquement si les résultats sont explicitement fournis.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Évaluation",
+      "instruction": "Diagnostic principal et/ou diagnostics différentiels, raisonnement clinique, interprétation des constatations et statut des affections. Inclure uniquement si documenté.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Plan",
+      "instruction": "Inclure uniquement si des actions futures sont explicitement mentionnées : examens/procédures demandés, médicaments/traitements prescrits, références/consultations, instructions de suivi et éducation du patient.",
+      "format": "list"
+    }
+  ]
+}

@@ -16,7 +16,7 @@
 //! use crate::summary::templates;
 //!
 //! // Load a specific template
-//! let template = templates::get_template("daily_standup")?;
+//! let template = templates::get_template("follow_ups")?;
 //!
 //! // Generate markdown structure
 //! let markdown = template.to_markdown_structure();
@@ -31,9 +31,9 @@
 //! # Custom Templates
 //!
 //! Users can add custom templates to:
-//! - macOS: `~/Library/Application Support/Meetily/templates/`
-//! - Windows: `%APPDATA%\Meetily\templates\`
-//! - Linux: `~/.config/Meetily/templates/`
+//! - macOS: `~/Library/Application Support/ONOS/templates/`
+//! - Windows: `%APPDATA%\ONOS\templates\`
+//! - Linux: `~/.config/ONOS/templates/`
 //!
 //! Custom templates must follow the JSON schema defined in `types::Template`.
 

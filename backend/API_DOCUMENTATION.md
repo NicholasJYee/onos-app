@@ -1,4 +1,4 @@
-# Meetily API Documentation
+# ONOS API Documentation
 
 ## Prerequisites
 

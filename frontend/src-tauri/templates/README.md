@@ -4,25 +4,15 @@ This directory contains template definitions for meeting summary generation.
 
 ## Available Templates
 
-### 1. `daily_standup.json`
-Time-boxed daily updates template designed for engineering/product teams.
+### 1. `follow_ups.json`
+Orthopaedic follow-up note template for AI-assisted ambient scribing.
 
-**Sections:**
-- Date
-- Attendees
-- Yesterday (completed work)
-- Today (planned work)
-- Blockers
-- Notes
+**Sections:** Patient Information, Chief Complaint / Follow-up Duration, HPI, ROS, PMHx, and other clinical sections as defined in the template.
 
-### 2. `standard_meeting.json`
-General-purpose meeting notes template focusing on key outcomes and actions.
+### 2. `consults.json`
+Consult note template for orthopaedic consults (AI-assisted ambient scribe).
 
-**Sections:**
-- Summary
-- Key Decisions
-- Action Items
-- Discussion Highlights
+**Sections:** Patient Information, Chief Complaint / Follow-up Duration, HPI, ROS, PMHx, and other clinical sections as defined in the template.
 
 ## Template Structure
 
@@ -47,9 +37,9 @@ Each template JSON file follows this schema:
 
 Users can add custom templates to the application data directory:
 
-- **macOS**: `~/Library/Application Support/Meetily/templates/`
-- **Windows**: `%APPDATA%\Meetily\templates\`
-- **Linux**: `~/.config/Meetily/templates/`
+- **macOS**: `~/Library/Application Support/ONOS/templates/`
+- **Windows**: `%APPDATA%\ONOS\templates\`
+- **Linux**: `~/.config/ONOS/templates/`
 
 Custom templates override built-in templates with the same filename.
 
@@ -75,7 +65,7 @@ Templates are loaded using the `templates` module:
 use crate::summary::templates;
 
 // Get a specific template
-let template = templates::get_template("daily_standup")?;
+let template = templates::get_template("follow_ups")?;
 
 // List available templates
 let available = templates::list_templates();

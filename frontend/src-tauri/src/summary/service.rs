@@ -71,7 +71,7 @@ impl SummaryService {
     /// * `model_provider` - LLM provider name (e.g., "ollama", "openai")
     /// * `model_name` - Specific model (e.g., "gpt-4", "llama3.2:latest")
     /// * `custom_prompt` - Optional user-provided context
-    /// * `template_id` - Template identifier (e.g., "daily_standup", "standard_meeting")
+    /// * `template_id` - Template identifier (e.g., "follow_ups", "consults")
     pub async fn process_transcript_background<R: tauri::Runtime>(
         _app: AppHandle<R>,
         pool: SqlitePool,

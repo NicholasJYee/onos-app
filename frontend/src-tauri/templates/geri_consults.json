@@ -1,0 +1,76 @@
+{
+  "name": "Geriatrics Consult Note",
+  "description": "An AI-assisted ambient scribe for geriatric consults",
+    "sections": [
+    {
+      "title": "Time",
+      "instruction": "Document the encounter time only if explicitly stated.",
+      "format": "string"
+    },
+    {
+      "title": "Identification",
+      "instruction": "Include age, role, preadmission Clinical Frailty Scale score, referring service, reason for geriatric assessment, admission date, and admission diagnosis only if explicitly stated.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Collateral Contacts",
+      "instruction": "State whether consent for collateral information was obtained and list collateral contacts with relationship/role only if explicitly documented.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Past Medical History",
+      "instruction": "Document past medical history only if explicitly mentioned.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Medications and Allergies",
+      "instruction": "Include dispensing pharmacy, packaging format, pre-hospital medications, allergies, current inpatient medications, and PRN medications only if explicitly stated.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Habits",
+      "instruction": "Document smoking, alcohol, cannabis, and other substance use only if explicitly stated.",
+      "format": "paragraph"
+    },
+    {
+      "title": "History of Present Illness",
+      "instruction": "Provide a chronological account of the presenting issue and hospital course relevant to the geriatric consult. Include mobility orders, diet orders, voiding method, last bowel movement, and code status only if explicitly documented.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Geriatric Review of Systems (Prior to Hospitalization)",
+      "instruction": "Include only domains explicitly assessed: cognition, mood, falls, bone health, vision, hearing, sleep, nutrition, pain, continence, usual level of activity, and abuse/neglect.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Functional History (Prior to Hospitalization)",
+      "instruction": "Document ADLs, IADLs, adaptive equipment, and community services only if explicitly assessed.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Social History",
+      "instruction": "Include birthplace, education level, occupation, housing arrangement, family, attorney for personal care, and hobbies/interests only if explicitly mentioned.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Mental Status Examination",
+      "instruction": "Document findings only if a mental status examination was performed and explicitly described.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Physical Examination",
+      "instruction": "Document objective findings as recorded; organize by system if details are provided.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Investigations",
+      "instruction": "Include laboratory results, imaging, and ECG findings only if explicitly provided.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Geriatric Issues and Recommendations",
+      "instruction": "Summarize the case and list identified geriatric issues with corresponding recommendations only if explicitly documented.",
+      "format": "paragraph"
+    }
+  ]
+}

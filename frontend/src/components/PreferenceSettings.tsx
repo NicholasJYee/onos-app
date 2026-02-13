@@ -221,9 +221,9 @@ export function PreferenceSettings() {
       </div>
 
       {/* Analytics Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      {/* <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
         <AnalyticsConsentSwitch />
-      </div>
+      </div> */}
     </div>
   )
 }

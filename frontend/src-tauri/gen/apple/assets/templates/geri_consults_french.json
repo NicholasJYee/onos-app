@@ -1,0 +1,76 @@
+{
+  "name": "Geriatrics Consult Note (French)",
+  "description": "Un scribe ambiant assisté par IA pour les consultations en gériatrie",
+  "sections": [
+    {
+      "title": "Heure",
+      "instruction": "Documenter l’heure de la rencontre uniquement si elle est explicitement mentionnée.",
+      "format": "string"
+    },
+    {
+      "title": "Identification",
+      "instruction": "Inclure l’âge, le rôle, le score préadmission à l’échelle clinique de fragilité (Clinical Frailty Scale), le service référent, le motif de l’évaluation gériatrique, la date d’admission et le diagnostic d’admission uniquement si explicitement mentionnés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Contacts collatéraux",
+      "instruction": "Préciser si le consentement pour obtenir des informations collatérales a été obtenu et énumérer les contacts collatéraux avec leur lien/rôle uniquement si cela est explicitement documenté.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Antécédents médicaux",
+      "instruction": "Documenter les antécédents médicaux uniquement s’ils sont explicitement mentionnés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Médicaments et allergies",
+      "instruction": "Inclure la pharmacie dispensatrice, le format de conditionnement, les médicaments préhospitaliers, les allergies, les médicaments actuels en hospitalisation et les médicaments au besoin (PRN) uniquement si explicitement mentionnés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Habitudes de vie",
+      "instruction": "Documenter le tabagisme, la consommation d’alcool, de cannabis et d’autres substances uniquement si explicitement mentionnés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Histoire de la maladie actuelle",
+      "instruction": "Fournir un récit chronologique du problème actuel et de l’évolution hospitalière pertinente à la consultation en gériatrie. Inclure les ordonnances de mobilité, le régime alimentaire, le mode d’élimination urinaire, la date de la dernière selle et le statut de réanimation uniquement si explicitement documentés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Revue gériatrique des systèmes (avant l’hospitalisation)",
+      "instruction": "Inclure uniquement les domaines explicitement évalués : cognition, humeur, chutes, santé osseuse, vision, audition, sommeil, nutrition, douleur, continence, niveau d’activité habituel et maltraitance/négligence.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Histoire fonctionnelle (avant l’hospitalisation)",
+      "instruction": "Documenter les AVQ (ADLs), AIVQ (IADLs), les aides techniques et les services communautaires uniquement si explicitement évalués.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Histoire sociale",
+      "instruction": "Inclure le lieu de naissance, le niveau de scolarité, l’occupation, le mode d’habitation, la famille, le mandataire pour soins personnels et les loisirs/intérêts uniquement si explicitement mentionnés.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Examen de l’état mental",
+      "instruction": "Documenter les constatations uniquement si un examen de l’état mental a été réalisé et explicitement décrit.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Examen physique",
+      "instruction": "Documenter les constatations objectives telles que consignées ; organiser par système si des détails sont fournis.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Examens complémentaires",
+      "instruction": "Inclure les résultats de laboratoire, d’imagerie et d’ECG uniquement s’ils sont explicitement fournis.",
+      "format": "paragraph"
+    },
+    {
+      "title": "Problèmes gériatriques et recommandations",
+      "instruction": "Résumer le cas et énumérer les problèmes gériatriques identifiés avec les recommandations correspondantes uniquement si explicitement documentés.",
+      "format": "paragraph"
+    }
+  ]
+}

@@ -2,21 +2,33 @@
 mod ffmpeg;
 
 fn main() {
+    // Determine the *target* OS (not the host OS). Build scripts compile for the host.
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+    // Make tauri-build stop panicking about missing DEP_TAURI_DEV by setting it explicitly.
+    // (Build scripts can set process env vars before calling into tauri-build.)
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".into());
+    let is_dev = profile != "release";
+    std::env::set_var("DEP_TAURI_DEV", if is_dev { "true" } else { "false" });
+
     // GPU Acceleration Detection and Build Guidance
     detect_and_report_gpu_capabilities();
 
-    #[cfg(target_os = "macos")]
-    {
+    // Link the correct Apple frameworks for the *target*.
+    if target_os == "macos" {
         println!("cargo:rustc-link-lib=framework=AVFoundation");
         println!("cargo:rustc-link-lib=framework=Cocoa");
         println!("cargo:rustc-link-lib=framework=Foundation");
-
-        // Let the enhanced_macos crate handle its own Swift compilation
-        // The swift-rs crate build will be handled in the enhanced_macos crate's build.rs
+    } else if target_os == "ios" {
+        // iOS must not link Cocoa.
+        println!("cargo:rustc-link-lib=framework=AVFoundation");
+        println!("cargo:rustc-link-lib=framework=Foundation");
     }
 
-    // Download and bundle FFmpeg binary at build-time
-    ffmpeg::ensure_ffmpeg_binary();
+    // Bundle FFmpeg only for desktop targets.
+    if target_os != "ios" {
+        ffmpeg::ensure_ffmpeg_binary();
+    }
 
     tauri_build::build()
 }
@@ -46,7 +58,6 @@ fn detect_and_report_gpu_capabilities() {
                 println!("cargo:warning=💡 For AMD/Intel GPU: cargo build --release --features vulkan");
                 println!("cargo:warning=💡 For CPU optimization: cargo build --release --features openblas");
 
-                // Try to detect NVIDIA GPU
                 if which::which("nvidia-smi").is_ok() {
                     println!("cargo:warning=🎯 NVIDIA GPU detected! Consider rebuilding with --features cuda");
                 }
@@ -68,12 +79,10 @@ fn detect_and_report_gpu_capabilities() {
                 println!("cargo:warning=💡 For other GPUs: cargo build --release --features vulkan");
                 println!("cargo:warning=💡 For CPU optimization: cargo build --release --features openblas");
 
-                // Try to detect NVIDIA GPU
                 if which::which("nvidia-smi").is_ok() {
                     println!("cargo:warning=🎯 NVIDIA GPU detected! Consider rebuilding with --features cuda");
                 }
 
-                // Try to detect AMD GPU
                 if which::which("rocm-smi").is_ok() {
                     println!("cargo:warning=🎯 AMD GPU detected! Consider rebuilding with --features hipblas");
                 }
@@ -84,8 +93,12 @@ fn detect_and_report_gpu_capabilities() {
         }
     }
 
-    // Performance guidance
-    if !cfg!(feature = "cuda") && !cfg!(feature = "vulkan") && !cfg!(feature = "hipblas") && !cfg!(feature = "openblas") && target_os != "macos" {
+    if !cfg!(feature = "cuda")
+        && !cfg!(feature = "vulkan")
+        && !cfg!(feature = "hipblas")
+        && !cfg!(feature = "openblas")
+        && target_os != "macos"
+    {
         println!("cargo:warning=📊 Performance: CPU-only builds are significantly slower than GPU/BLAS builds");
         println!("cargo:warning=📚 See README.md for GPU/BLAS setup instructions");
     }

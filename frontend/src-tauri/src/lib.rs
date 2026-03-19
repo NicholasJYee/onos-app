@@ -1,7 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex as StdMutex;
+use crate::llama_bridge::{LlamaConfig, LlamaState};
+
 // Removed unused import
+
+// Parakeet engine module (ONNX-based fast transcription) (dont run it on iOS)
+#[cfg(not(target_os = "ios"))]
+pub mod parakeet_engine;
 
 // Performance optimization: Conditional logging macros for hot paths
 #[cfg(debug_assertions)]
@@ -35,6 +41,7 @@ pub(crate) use perf_trace;
 // Re-export async logging macros for external use (removed due to macro conflicts)
 
 // Declare audio module
+pub mod llama_bridge;
 pub mod analytics;
 pub mod api;
 pub mod audio;
@@ -47,7 +54,6 @@ pub mod openai;
 pub mod anthropic;
 pub mod groq;
 pub mod openrouter;
-pub mod parakeet_engine;
 pub mod state;
 pub mod summary;
 pub mod tray;
@@ -411,6 +417,12 @@ pub fn run() {
         )) as NotificationManagerState<tauri::Wry>)
         .manage(audio::init_system_audio_state())
         .manage(summary::summary_engine::ModelManagerState(Arc::new(tokio::sync::Mutex::new(None))))
+        .manage(LlamaState(std::sync::RwLock::new(LlamaConfig {
+            // Use default model filename (gemma-3-1b-it-Q8_0.gguf) from summary engine
+            // This can be updated dynamically when model selection changes
+            model_filename: summary::summary_engine::models::get_default_model().gguf_file,
+            ..Default::default()
+        })))        
         .setup(|_app| {
             log::info!("Application setup complete");
 
@@ -713,6 +725,9 @@ pub fn run() {
             onboarding::save_onboarding_status_cmd,
             onboarding::reset_onboarding_status_cmd,
             onboarding::complete_onboarding,
+            // Llama bridge commands
+            llama_generate,
+            llama_update_model_filename,
             // System settings commands
             #[cfg(target_os = "macos")]
             utils::open_system_settings,
@@ -744,4 +759,23 @@ pub fn run() {
                 log::info!("Application cleanup complete");
             }
         });
+}
+
+#[tauri::command]
+fn llama_generate(
+    app: tauri::AppHandle,
+    state: tauri::State<LlamaState>,
+    prompt: String,
+) -> Result<String, String> {
+    crate::llama_bridge::run_llama(&app, &state, &prompt).map_err(|e| e.to_string())
+}
+
+/// Update the llama model filename when model selection changes
+#[tauri::command]
+fn llama_update_model_filename(
+    state: tauri::State<LlamaState>,
+    model_filename: String,
+) -> Result<(), String> {
+    crate::llama_bridge::update_model_filename(&state, model_filename)
+        .map_err(|e| e.to_string())
 }

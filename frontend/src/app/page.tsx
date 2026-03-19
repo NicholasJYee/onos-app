@@ -260,6 +260,11 @@ export default function Home() {
           sidebarCollapsed={sidebarCollapsed}
         />
       </div>
+
+      {/* Research version disclaimer */}
+      <footer className="shrink-0 py-2 px-4 text-center text-xs text-gray-500 bg-gray-100/80">
+        This is a research version. This software is intended for research use only and is not intended for clinical use. It should not be used for clinical decision-making or patient care. Use of this software is at the user&apos;s own risk; the developer assumes no liability for any consequences arising from its use.
+      </footer>
     </motion.div>
   );
 }

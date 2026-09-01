@@ -134,10 +134,6 @@ Deeper documentation: [`docs/architecture.md`](docs/architecture.md), [`docs/BUI
 
 Issues and pull requests are welcome. `CONTRIBUTING.md` has the details.
 
-## License
-
-MIT — see [LICENSE.md](LICENSE.md).
-
 ## Credits
 
 ONOS is built on top of **[Meetily](https://github.com/Zackriya-Solutions/meetily)** by [Zackriya Solutions](https://github.com/Zackriya-Solutions) — an open-source, privacy-first meeting assistant. Their work provided the audio pipeline, the local transcription and summarization architecture, and the Tauri application foundation that this project is adapted from. ONOS narrows that general-purpose meeting tool into a clinical documentation workflow.

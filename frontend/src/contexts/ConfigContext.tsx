@@ -196,7 +196,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           // now the default and (unlike Parakeet) supports language selection.
           if (config.provider === 'parakeet') {
             console.log('[ConfigContext] Migrating transcript config from Parakeet to Whisper');
-            const migrated = {
+            const migrated: TranscriptModelProps = {
               provider: 'localWhisper',
               model: 'large-v3-turbo',
               apiKey: null,

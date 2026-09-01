@@ -134,15 +134,6 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   // value is loaded from the backend on mount below.
   const [selectedLanguage, setSelectedLanguage] = useState('en');
 
-  useEffect(() => {
-    configService
-      .getLanguagePreference()
-      .then((language) => {
-        if (language) setSelectedLanguage(language);
-      })
-      .catch((err) => console.error('Failed to load language preference:', err));
-  }, []);
-
   // UI preferences state
   const [showConfidenceIndicator, setShowConfidenceIndicator] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -373,9 +364,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           console.log('Loaded language preference:', language);
         }
       } catch (error) {
-        console.log('No language preference found or failed to load, using default (auto-translate):', error);
-        // Default to 'auto-translate' (Auto Detect with English translation) if no preference is saved
-        setSelectedLanguage('auto-translate');
+        console.log('No language preference found or failed to load, using default (en):', error);
+        // Default to English if no preference is saved
+        setSelectedLanguage('en');
       }
     };
     loadLanguagePreference();

@@ -101,8 +101,8 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   // Transcript model configuration state
   const [transcriptModelConfig, setTranscriptModelConfig] = useState<TranscriptModelProps>({
-    provider: 'parakeet',
-    model: 'parakeet-tdt-0.6b-v3-int8',
+    provider: 'localWhisper',
+    model: 'large-v3-turbo',
     apiKey: null
   });
 
@@ -130,8 +130,18 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     systemDevice: null
   });
 
-  // Language preference state
-  const [selectedLanguage, setSelectedLanguage] = useState('auto-translate');
+  // Language preference state. Defaults to English; the persisted "last used"
+  // value is loaded from the backend on mount below.
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+
+  useEffect(() => {
+    configService
+      .getLanguagePreference()
+      .then((language) => {
+        if (language) setSelectedLanguage(language);
+      })
+      .catch((err) => console.error('Failed to load language preference:', err));
+  }, []);
 
   // UI preferences state
   const [showConfidenceIndicator, setShowConfidenceIndicator] = useState<boolean>(() => {
@@ -181,9 +191,31 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         const config = await configService.getTranscriptConfig();
         if (config) {
           console.log('[ConfigContext] Loaded saved transcript config:', config);
+
+          // Migrate installs still pinned to Parakeet over to Whisper, which is
+          // now the default and (unlike Parakeet) supports language selection.
+          if (config.provider === 'parakeet') {
+            console.log('[ConfigContext] Migrating transcript config from Parakeet to Whisper');
+            const migrated = {
+              provider: 'localWhisper',
+              model: 'large-v3-turbo',
+              apiKey: null,
+            };
+            setTranscriptModelConfig(migrated);
+            invoke('api_save_transcript_config', {
+              provider: migrated.provider,
+              model: migrated.model,
+              apiKey: null,
+              authToken: null,
+            }).catch((err) =>
+              console.error('[ConfigContext] Failed to persist migrated transcript config:', err)
+            );
+            return;
+          }
+
           setTranscriptModelConfig({
-            provider: config.provider || 'parakeet',
-            model: config.model || 'parakeet-tdt-0.6b-v3-int8',
+            provider: config.provider || 'localWhisper',
+            model: config.model || 'large-v3-turbo',
             apiKey: config.apiKey || null
           });
         }

@@ -69,9 +69,26 @@ use tokio::sync::RwLock;
 
 static RECORDING_FLAG: AtomicBool = AtomicBool::new(false);
 
-// Global language preference storage (default to "auto-translate" for automatic translation to English)
+// Global language preference storage. Defaults to English; the last value the
+// user selected is persisted to preferences.json and restored at startup.
 static LANGUAGE_PREFERENCE: std::sync::LazyLock<StdMutex<String>> =
-    std::sync::LazyLock::new(|| StdMutex::new("auto-translate".to_string()));
+    std::sync::LazyLock::new(|| StdMutex::new("en".to_string()));
+
+const LANGUAGE_PREFERENCE_KEY: &str = "language_preference";
+
+/// Restore the persisted language preference (if any) into the in-memory global.
+fn load_language_preference<R: Runtime>(app: &AppHandle<R>) {
+    use tauri_plugin_store::StoreExt;
+    let Ok(store) = app.store("preferences.json") else { return };
+    if let Some(value) = store.get(LANGUAGE_PREFERENCE_KEY) {
+        if let Some(language) = value.as_str() {
+            if let Ok(mut pref) = LANGUAGE_PREFERENCE.lock() {
+                log_info!("Restored language preference: {}", language);
+                *pref = language.to_string();
+            }
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct RecordingArgs {
@@ -388,12 +405,30 @@ async fn get_language_preference() -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn set_language_preference(language: String) -> Result<(), String> {
-    let mut lang_pref = LANGUAGE_PREFERENCE
-        .lock()
-        .map_err(|e| format!("Failed to set language preference: {}", e))?;
-    log_info!("Setting language preference to: {}", language);
-    *lang_pref = language;
+async fn set_language_preference<R: Runtime>(
+    app: AppHandle<R>,
+    language: String,
+) -> Result<(), String> {
+    {
+        let mut lang_pref = LANGUAGE_PREFERENCE
+            .lock()
+            .map_err(|e| format!("Failed to set language preference: {}", e))?;
+        log_info!("Setting language preference to: {}", language);
+        *lang_pref = language.clone();
+    }
+
+    // Persist so the choice survives a restart.
+    use tauri_plugin_store::StoreExt;
+    match app.store("preferences.json") {
+        Ok(store) => {
+            store.set(LANGUAGE_PREFERENCE_KEY, serde_json::Value::String(language));
+            if let Err(e) = store.save() {
+                log_error!("Failed to persist language preference: {}", e);
+            }
+        }
+        Err(e) => log_error!("Failed to open preferences store: {}", e),
+    }
+
     Ok(())
 }
 
@@ -425,6 +460,9 @@ pub fn run() {
         })))        
         .setup(|_app| {
             log::info!("Application setup complete");
+
+            // Restore the user's last-used transcription language
+            load_language_preference(&_app.handle());
 
             // Initialize system tray
             if let Err(e) = tray::create_tray(_app.handle()) {

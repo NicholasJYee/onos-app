@@ -103,7 +103,7 @@
         ],
         "macOS": {
             "entitlements": "entitlements.plist",
-            "signingIdentity": "-",
+            "signingIdentity": "1D69F6DB811A0E0A14A87D39759C46F16DE052A3",
             "hardenedRuntime": true
         },
         "windows": {

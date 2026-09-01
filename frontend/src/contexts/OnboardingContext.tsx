@@ -5,7 +5,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import type { PermissionStatus, OnboardingPermissions } from '@/types/onboarding';
 
-const PARAKEET_MODEL = 'parakeet-tdt-0.6b-v3-int8';
+// Default transcription model (Whisper large-v3-turbo, ~1549 MB)
+const TRANSCRIPTION_MODEL = 'large-v3-turbo';
 
 interface OnboardingStatus {
   version: string;
@@ -206,10 +207,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       speed_mbps?: number;
       status?: string;
     }>(
-      'parakeet-model-download-progress',
+      'model-download-progress',
       (event) => {
         const { modelName, progress, downloaded_mb, total_mb, speed_mbps, status } = event.payload;
-        if (modelName === PARAKEET_MODEL) {
+        if (modelName === TRANSCRIPTION_MODEL) {
           setParakeetProgress(progress);
           setParakeetProgressInfo({
             percent: progress,
@@ -225,10 +226,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     );
 
     const unlistenComplete = listen<{ modelName: string }>(
-      'parakeet-model-download-complete',
+      'model-download-complete',
       (event) => {
         const { modelName } = event.payload;
-        if (modelName === PARAKEET_MODEL) {
+        if (modelName === TRANSCRIPTION_MODEL) {
           setParakeetDownloaded(true);
           setParakeetProgress(100);
         }
@@ -236,11 +237,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     );
 
     const unlistenError = listen<{ modelName: string; error: string }>(
-      'parakeet-model-download-error',
+      'model-download-error',
       (event) => {
         const { modelName } = event.payload;
-        if (modelName === PARAKEET_MODEL) {
-          console.error('Parakeet download error:', event.payload.error);
+        if (modelName === TRANSCRIPTION_MODEL) {
+          console.error('Transcription model download error:', event.payload.error);
         }
       }
     );
@@ -328,9 +329,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
     // Verify Parakeet model exists on disk
     try {
-      await invoke('parakeet_init');
-      parakeetDownloaded = await invoke<boolean>('parakeet_has_available_models');
-      console.log('[OnboardingContext] Parakeet verified on disk:', parakeetDownloaded);
+      await invoke('whisper_init');
+      parakeetDownloaded = await invoke<boolean>('whisper_has_available_models');
+      console.log('[OnboardingContext] Whisper model verified on disk:', parakeetDownloaded);
     } catch (error) {
       console.warn('[OnboardingContext] Failed to verify Parakeet:', error);
       parakeetDownloaded = false;
@@ -348,13 +349,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }
 
     // Determine the correct step based on verified status
-    // New simplified flow: Step 1: Welcome, Step 2: Setup Overview, Step 3: Download Progress, Step 4: Permissions (macOS)
+    // New simplified flow: Step 1: Welcome, Step 2: Setup + Download, Step 3: Permissions (macOS)
     let currentStep = savedStatus.current_step;
     let completed = savedStatus.completed;
 
-    // Clamp step to new max (4)
-    if (currentStep > 4) {
-      currentStep = 3; // Go to download progress step
+    // Clamp step to new max (3)
+    if (currentStep > 3) {
+      currentStep = 2; // Go to the setup + download step
     }
 
     // Trust the completed status - don't revert based on model downloads
@@ -429,9 +430,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       // Start Parakeet download first (speech recognition - always required)
       if (!parakeetDownloaded) {
-        console.log('[OnboardingContext] Starting Parakeet download');
-        invoke('parakeet_download_model', { modelName: PARAKEET_MODEL })
-          .catch(err => console.error('[OnboardingContext] Parakeet download failed:', err));
+        console.log('[OnboardingContext] Starting Whisper download');
+        invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL })
+          .catch(err => console.error('[OnboardingContext] Whisper download failed:', err));
       }
 
       // Start Gemma download after a delay to prioritize Parakeet bandwidth
@@ -452,7 +453,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   // Check if any models are currently downloading (for re-entry)
   const checkActiveDownloads = async () => {
     try {
-      const models = await invoke<any[]>('parakeet_get_available_models');
+      const models = await invoke<any[]>('whisper_get_available_models');
       const isDownloading = models.some(m => m.status && (typeof m.status === 'object' ? 'Downloading' in m.status : m.status === 'Downloading'));
       
       if (isDownloading) {
@@ -460,7 +461,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         setIsBackgroundDownloading(true);
       }
       
-      // Also check for Gemma/Built-in AI downloads if possible (though less critical as Parakeet is the main blocker)
+      // Also check for Gemma/Built-in AI downloads if possible (the transcription model is the main blocker)
       
     } catch (error) {
       console.warn('[OnboardingContext] Failed to check active downloads:', error);
@@ -468,9 +469,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   };
 
   const retryParakeetDownload = async () => {
-    console.log('[OnboardingContext] Retrying Parakeet download');
+    console.log('[OnboardingContext] Retrying transcription model download');
     try {
-      await invoke('parakeet_retry_download', { modelName: PARAKEET_MODEL });
+      await invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL });
     } catch (error) {
       console.error('[OnboardingContext] Retry failed:', error);
       throw error;
@@ -485,14 +486,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setCurrentStep(Math.max(1, Math.min(step, 4)));
+    setCurrentStep(Math.max(1, Math.min(step, 3)));
   }, []);
 
   const goNext = useCallback(() => {
     setCurrentStep((prev: number) => {
       const next = prev + 1;
-      // Don't go past step 4
-      return Math.min(next, 4);
+      // Don't go past step 3
+      return Math.min(next, 3);
     });
   }, []);
 

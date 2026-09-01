@@ -8,7 +8,9 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const PARAKEET_MODEL = 'parakeet-tdt-0.6b-v3-int8';
+// Default transcription model (Whisper large-v3-turbo)
+const TRANSCRIPTION_MODEL = 'large-v3-turbo';
+const TRANSCRIPTION_MODEL_MB = 1549;
 
 type DownloadStatus = 'waiting' | 'downloading' | 'completed' | 'error';
 
@@ -21,7 +23,13 @@ interface DownloadState {
   error?: string;
 }
 
-export function DownloadProgressStep() {
+interface DownloadProgressStepProps {
+  /** When true, render only the inner content (no OnboardingContainer wrapper),
+   *  so it can be embedded inside another step's container. */
+  embedded?: boolean;
+}
+
+export function DownloadProgressStep({ embedded = false }: DownloadProgressStepProps = {}) {
   const {
     goNext,
     selectedSummaryModel,
@@ -41,7 +49,7 @@ export function DownloadProgressStep() {
     status: parakeetDownloaded ? 'completed' : 'waiting',
     progress: parakeetDownloaded ? 100 : 0,
     downloadedMb: 0,
-    totalMb: 670,
+    totalMb: TRANSCRIPTION_MODEL_MB,
     speedMbps: 0,
   });
 
@@ -66,7 +74,7 @@ export function DownloadProgressStep() {
       return;
     }
 
-    console.log('[DownloadProgressStep] Retrying Parakeet download');
+    console.log('[DownloadProgressStep] Retrying transcription model download');
     retryingRef.current = true;
 
     // Reset error state
@@ -80,7 +88,7 @@ export function DownloadProgressStep() {
     }));
 
     try {
-      await invoke('parakeet_retry_download', { modelName: PARAKEET_MODEL });
+      await invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL });
       // Progress events will update state
     } catch (error) {
       console.error('[DownloadProgressStep] Retry failed:', error);
@@ -187,17 +195,22 @@ export function DownloadProgressStep() {
       total_mb?: number;
       speed_mbps?: number;
       status?: string;
-    }>('parakeet-model-download-progress', (event) => {
+    }>('model-download-progress', (event) => {
       const { modelName, progress, downloaded_mb, total_mb, speed_mbps, status } = event.payload;
-      if (modelName === PARAKEET_MODEL) {
-        setParakeetState((prev) => ({
-          ...prev,
-          status: status === 'completed' ? 'completed' : 'downloading',
-          progress,
-          downloadedMb: downloaded_mb ?? prev.downloadedMb,
-          totalMb: total_mb ?? prev.totalMb,
-          speedMbps: speed_mbps ?? prev.speedMbps,
-        }));
+      if (modelName === TRANSCRIPTION_MODEL) {
+        setParakeetState((prev) => {
+          const totalMb = total_mb ?? prev.totalMb;
+          return {
+            ...prev,
+            status: status === 'completed' ? 'completed' : 'downloading',
+            progress,
+            // The Whisper downloader reports percent only, so derive MB from it
+            // when the event doesn't carry byte counts.
+            downloadedMb: downloaded_mb ?? (totalMb * progress) / 100,
+            totalMb,
+            speedMbps: speed_mbps ?? prev.speedMbps,
+          };
+        });
 
         if (status === 'completed' || progress >= 100) {
           setParakeetDownloaded(true);
@@ -206,9 +219,9 @@ export function DownloadProgressStep() {
     });
 
     const unlistenComplete = listen<{ modelName: string }>(
-      'parakeet-model-download-complete',
+      'model-download-complete',
       (event) => {
-        if (event.payload.modelName === PARAKEET_MODEL) {
+        if (event.payload.modelName === TRANSCRIPTION_MODEL) {
           setParakeetState((prev) => ({ ...prev, status: 'completed', progress: 100 }));
           setParakeetDownloaded(true);
         }
@@ -216,9 +229,9 @@ export function DownloadProgressStep() {
     );
 
     const unlistenError = listen<{ modelName: string; error: string }>(
-      'parakeet-model-download-error',
+      'model-download-error',
       (event) => {
-        if (event.payload.modelName === PARAKEET_MODEL) {
+        if (event.payload.modelName === TRANSCRIPTION_MODEL) {
           setParakeetState((prev) => ({
             ...prev,
             status: 'error',
@@ -296,8 +309,8 @@ export function DownloadProgressStep() {
   const handleContinue = async () => {
     // Verify actual model availability (catches state drift)
     try {
-      await invoke('parakeet_init');
-      const actuallyAvailable = await invoke<boolean>('parakeet_has_available_models');
+      await invoke('whisper_init');
+      const actuallyAvailable = await invoke<boolean>('whisper_has_available_models');
 
       if (actuallyAvailable && !parakeetDownloaded) {
         console.log('[DownloadProgressStep] Model available but state not updated');
@@ -400,16 +413,9 @@ export function DownloadProgressStep() {
             <span className="text-gray-600">
               {state.downloadedMb.toFixed(1)} MB / {state.totalMb.toFixed(1)} MB
             </span>
-            <div className="flex items-center gap-2">
-              {state.speedMbps > 0 && (
-                <span className="text-gray-500">
-                  {state.speedMbps.toFixed(1)} MB/s
-                </span>
-              )}
-              <span className="font-semibold text-gray-900">
-                {Math.round(state.progress)}%
-              </span>
-            </div>
+            <span className="font-semibold text-gray-900">
+              {Math.round(state.progress)}%
+            </span>
           </div>
         </div>
       )}
@@ -435,13 +441,7 @@ export function DownloadProgressStep() {
     </div>
   );
 
-  return (
-    <OnboardingContainer
-      title="Getting things ready"
-      description="You can start using ONOS after downloading the Transcription Engine."
-      step={3}
-      totalSteps={isMac ? 4 : 3}
-    >
+  const content = (
       <div className="flex flex-col items-center space-y-6">
         {/* Download Cards */}
         <div className="w-full max-w-lg space-y-4">
@@ -449,7 +449,7 @@ export function DownloadProgressStep() {
             'Transcription Engine',
             <Mic className="w-5 h-5 text-gray-600" />,
             parakeetState,
-            '~670 MB'
+            '~1.5 GB'
           )}
 
           {renderDownloadCard(
@@ -498,6 +498,18 @@ export function DownloadProgressStep() {
           </Button>
         </div>
       </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <OnboardingContainer
+      title="Getting things ready"
+      description="You can start using ONOS after downloading the Transcription Engine."
+      step={2}
+      totalSteps={isMac ? 3 : 2}
+    >
+      {content}
     </OnboardingContainer>
   );
 }

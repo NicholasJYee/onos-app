@@ -11,6 +11,8 @@
         "tauri": "tauri",
         "tauri:dev": "node scripts/tauri-auto.js dev",
         "tauri:build": "node scripts/tauri-auto.js build",
+        "build:mac": "node node_modules/@tauri-apps/cli/tauri.js build --target aarch64-apple-darwin",
+        "build:win": "node node_modules/@tauri-apps/cli/tauri.js build --target x86_64-pc-windows-msvc --features vulkan",
         "tauri:dev:cpu": "tauri dev",
         "tauri:dev:cuda": "tauri dev -- --features cuda",
         "tauri:dev:vulkan": "tauri dev -- --features vulkan",

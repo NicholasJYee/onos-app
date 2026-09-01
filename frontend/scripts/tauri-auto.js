@@ -39,6 +39,8 @@ console.log(''); // Empty line for spacing
 // Platform-specific environment variables
 const platform = os.platform();
 const env = { ...process.env };
+// Normalize CI: Tauri CLI expects "true"/"false", not "1" (Cursor/sandbox sets CI=1)
+if (env.CI === '1') env.CI = 'true';
 
 if (platform === 'linux' && feature === 'cuda') {
   console.log('🐧 Linux/CUDA detected: Setting CMAKE flags for NVIDIA GPU');
@@ -47,8 +49,9 @@ if (platform === 'linux' && feature === 'cuda') {
   env.CMAKE_POSITION_INDEPENDENT_CODE = 'ON';
 }
 
-// Build the tauri command
-let tauriCmd = `tauri ${command}`;
+// Build the tauri command - use direct path to avoid pnpm .bin require('./main') issue
+const tauriCliPath = path.join(__dirname, '..', 'node_modules', '@tauri-apps', 'cli', 'tauri.js');
+let tauriCmd = `node "${tauriCliPath}" ${command}`;
 if (feature && feature !== 'none') {
   tauriCmd += ` -- --features ${feature}`;
   console.log(`🚀 Running: tauri ${command} with features: ${feature}`);

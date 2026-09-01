@@ -23,8 +23,10 @@ export function UpdateCheckProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const { updateInfo, isChecking, checkForUpdates } = useUpdateCheck({
-    checkOnMount: true,
-    showNotification: true,
+    // Auto-update prompts are disabled: the configured updater endpoint points at
+    // upstream Meetily releases, not this fork. Updates are distributed manually.
+    checkOnMount: false,
+    showNotification: false,
     onUpdateAvailable: (info) => {
       // Show notification, dialog will be shown when user clicks notification
       showUpdateNotification(info, handleShowDialog);

@@ -27,9 +27,9 @@ It was built for ambient documentation of in-person consults, where sending pati
 
 ## How it works
 
-**Transcription** runs locally via [whisper.cpp](https://github.com/ggerganov/whisper.cpp). The default model is **Whisper large-v3-turbo** (~1.5 GB), downloaded once on first launch. Smaller models (`small`, `medium`, `large-v3-q5_0`) and the faster NVIDIA Parakeet engine are selectable in settings — the app switches between engines freely.
+**Transcription** runs locally via [whisper.cpp](https://github.com/ggerganov/whisper.cpp). The default model is **Whisper large-v3-turbo** (~1.5 GB), downloaded once on first launch. Whisper is multilingual, covering **97 languages**, so consultations can be conducted in whatever language the patient speaks. Smaller models (`small`, `medium`, `large-v3-q5_0`) and the faster NVIDIA Parakeet engine are selectable in settings — the app switches between engines freely.
 
-**Summarization** runs locally too, through a bundled `llama.cpp` sidecar. The default is **Gemma 3 1B**, with **Gemma 3 4B** offered on machines with enough memory. If you'd rather use a hosted model, Ollama, Claude, OpenAI, Groq, OpenRouter, and any OpenAI-compatible endpoint are all supported — but nothing leaves the machine unless you explicitly choose one.
+**Summarization** runs locally too, through a bundled `llama.cpp` sidecar. The default is **Gemma 3 4B** (~2.5 GB), chosen for note quality; the lighter **Gemma 3 1B** remains selectable in settings for low-memory machines. If you'd rather use a hosted model, Ollama, Claude, OpenAI, Groq, OpenRouter, and any OpenAI-compatible endpoint are all supported — but nothing leaves the machine unless you explicitly choose one.
 
 **Language** defaults to English and remembers whatever you last selected. Whisper supports manual language selection across the full ISO-639-1 set; French is wired through to the note templates.
 
@@ -83,17 +83,6 @@ With those set, `pnpm build:mac` signs, uploads to Apple, staples the ticket, an
 </details>
 
 <details>
-<summary><b>A note on build directories</b></summary>
-
-Don't build inside a cloud-synced folder (Dropbox, Synology Drive, iCloud). `tauri-build` writes thousands of small permission files and `hdiutil` mounts a disk image to create the `.dmg` — neither survives a sync provider reliably. If you must, redirect the build output:
-
-```bash
-export CARGO_TARGET_DIR="$HOME/onos-target"
-```
-
-</details>
-
-<details>
 <summary><b>Optional backend</b></summary>
 
 The desktop app is fully standalone. A FastAPI service in [`backend/`](backend/) adds shared meeting storage and server-side summarization for multi-machine setups. See [`backend/README.md`](backend/README.md).
@@ -114,6 +103,8 @@ Everything stays on disk, in the clear, under your control.
 
 ~/Movies/onos-recordings/     # audio files
 ```
+
+The recordings folder is configurable — change it under **Settings → Recording** to store audio on an external drive, an encrypted volume, or anywhere else that suits your setup. Existing recordings stay where they are; the new location applies to subsequent recordings.
 
 **Windows**
 
@@ -150,7 +141,3 @@ MIT — see [LICENSE.md](LICENSE.md).
 ## Credits
 
 ONOS is built on top of **[Meetily](https://github.com/Zackriya-Solutions/meetily)** by [Zackriya Solutions](https://github.com/Zackriya-Solutions) — an open-source, privacy-first meeting assistant. Their work provided the audio pipeline, the local transcription and summarization architecture, and the Tauri application foundation that this project is adapted from. ONOS narrows that general-purpose meeting tool into a clinical documentation workflow.
-
-If this project is useful to you, please consider starring [their repository](https://github.com/Zackriya-Solutions/meetily) as well.
-
-Also built on [whisper.cpp](https://github.com/ggerganov/whisper.cpp) and [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov, and [Tauri](https://tauri.app/).

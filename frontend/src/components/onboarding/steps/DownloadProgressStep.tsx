@@ -42,7 +42,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     completeOnboarding,
   } = useOnboarding();
 
-  const [recommendedModel, setRecommendedModel] = useState<string>('gemma3:1b');
+  const [recommendedModel, setRecommendedModel] = useState<string>('gemma3:4b');
   const [isMac, setIsMac] = useState(false);
 
   const [parakeetState, setParakeetState] = useState<DownloadState>({
@@ -57,7 +57,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     status: summaryModelDownloaded ? 'completed' : 'waiting',
     progress: summaryModelDownloaded ? 100 : 0,
     downloadedMb: 0,
-    totalMb: 806, // 1b model size
+    totalMb: 2374, // 4b model size
     speedMbps: 0,
   });
 
@@ -161,7 +161,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
         setSelectedSummaryModel(model);  // Update context
       } catch (error) {
         console.error('Failed to get recommended model:', error);
-        // Keep default gemma3:1b
+        // Keep default gemma3:4b
       }
     };
 

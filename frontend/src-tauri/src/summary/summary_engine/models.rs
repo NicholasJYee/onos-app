@@ -108,12 +108,14 @@ pub fn get_model_by_name(name: &str) -> Option<ModelDef> {
     get_available_models().into_iter().find(|m| m.name == name)
 }
 
-/// Get the default model (first in list)
+/// Get the default model (gemma3:4b, falling back to the first defined model)
 pub fn get_default_model() -> ModelDef {
-    get_available_models()
-        .into_iter()
-        .next()
-        .expect("At least one model must be defined")
+    get_model_by_name("gemma3:4b").unwrap_or_else(|| {
+        get_available_models()
+            .into_iter()
+            .next()
+            .expect("At least one model must be defined")
+    })
 }
 
 /// Resolve model name to full file path in the models directory

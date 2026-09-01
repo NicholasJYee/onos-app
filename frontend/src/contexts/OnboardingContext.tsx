@@ -84,7 +84,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     totalMb: 0,
     speedMbps: 0,
   });
-  const [selectedSummaryModel, setSelectedSummaryModel] = useState<string>('gemma3:1b');
+  const [selectedSummaryModel, setSelectedSummaryModel] = useState<string>('gemma3:4b');
   const [databaseExists, setDatabaseExists] = useState(false);
   const [isBackgroundDownloading, setIsBackgroundDownloading] = useState(false);
 
@@ -112,7 +112,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         console.log('[OnboardingContext] Set recommended model:', recommendedModel);
       } catch (error) {
         console.error('[OnboardingContext] Failed to get recommended model:', error);
-        // Keep default gemma3:1b
+        // Keep default gemma3:4b
       }
     };
     fetchRecommendation();
@@ -439,7 +439,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       if (includeGemma && !summaryModelDownloaded) {
         setTimeout(() => {
           console.log('[OnboardingContext] Starting Gemma download (delayed to prioritize Parakeet)');
-          invoke('builtin_ai_download_model', { modelName: selectedSummaryModel || 'gemma3:1b' })
+          invoke('builtin_ai_download_model', { modelName: selectedSummaryModel || 'gemma3:4b' })
             .catch(err => console.error('[OnboardingContext] Gemma download failed:', err));
         }, 3000); // 3 second delay to give Parakeet priority
       }

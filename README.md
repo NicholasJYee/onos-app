@@ -1,253 +1,156 @@
-<div align="center" style="border-bottom: none">
-    <h1>
-        <img src="docs/ONOS-6.png" style="border-radius: 10px;" />
-        <br>
-        Privacy-First AI Meeting Assistant
-    </h1>
-    <a href="https://trendshift.io/repositories/13272" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13272" alt="Zackriya-Solutions%2Fmeeting-minutes | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-    <br>
-    <br>
-    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases/"><img src="https://img.shields.io/badge/Pre_Release-Link-brightgreen" alt="Pre-Release"></a>
-    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/zackriya-solutions/meeting-minutes?style=flat">
-</a>
- <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases"> <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/zackriya-solutions/meeting-minutes/total?style=plastic"> </a>
-    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases"><img src="https://img.shields.io/badge/License-MIT-blue" alt="License"></a>
-    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases"><img src="https://img.shields.io/badge/Supported_OS-macOS,_Windows-white" alt="Supported OS"></a>
-    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases"><img alt="GitHub Tag" src="https://img.shields.io/github/v/tag/zackriya-solutions/meeting-minutes?include_prereleases&color=yellow">
-</a>
-    <br>
-    <h3>
-    <br>
-    Open Source • Privacy-First • Enterprise-Ready
-    </h3>
-    <p align="center">
-    Get latest <a href="https://www.zackriya.com/onos-subscribe/"><b>Product updates</b></a> <br><br>
-    <a href="https://onos.ai"><b>Website</b></a> •
-    <a href="https://www.linkedin.com/company/106363062/"><b>LinkedIn</b></a> •
-    <a href="https://discord.gg/crRymMQBFH"><b>ONOS Discord</b></a> •
-    <a href="https://discord.com/invite/vCFJvN4BwJ"><b>Privacy-First AI</b></a> •
-    <a href="https://www.reddit.com/r/onos/"><b>Reddit</b></a>
-</p>
-    <p align="center">
-
-A privacy-first AI meeting assistant that captures, transcribes, and summarizes meetings entirely on your infrastructure. Built by expert AI engineers passionate about data sovereignty and open source solutions. Perfect for enterprises that need advanced meeting intelligence without compromising on privacy, compliance, or control.
-
-</p>
-
-<p align="center">
-    <img src="docs/onos_demo.gif" width="650" alt="ONOS Demo" />
-    <br>
-    <a href="https://youtu.be/6FnhSC_eSz8">View full Demo Video</a>
-</p>
-
+<div align="center">
+    <img src="frontend/public/logo.png" width="120" alt="ONOS" />
+    <h1>ONOS</h1>
+    <p><b>A privacy-first AI clinical scribe that runs entirely on your machine.</b></p>
+    <p>
+        <img src="https://img.shields.io/badge/License-MIT-blue" alt="License: MIT" />
+        <img src="https://img.shields.io/badge/Supported_OS-macOS,_Windows-white" alt="Supported OS" />
+        <img src="https://img.shields.io/badge/Built_with-Tauri_2-24C8DB" alt="Tauri 2" />
+    </p>
 </div>
 
 ---
 
-> **🎉 New: ONOS PRO Available** - Looking for enhanced accuracy and advanced features? Check out our professional-grade solution with custom summary templates, advanced exports (PDF, DOCX), auto-meeting detection, built-in GDPR compliance, and many more. **This Community Edition remains forever free & open source**. [Learn more about PRO →](https://onos.ai/pro/)
+ONOS records a clinical encounter, transcribes it, and drafts a structured note — with no audio, transcript, or note ever leaving the device. There is no account, no telemetry requirement, and no cloud dependency. Everything runs locally: speech recognition through Whisper, summarization through a local language model.
 
----
+It was built for ambient documentation of in-person consults, where sending patient conversations to a third-party service is not an option.
 
-<details>
-<summary>Table of Contents</summary>
+## Contents
 
-- [Introduction](#introduction)
-- [Why ONOS?](#why-onos)
-- [Features](#features)
+- [How it works](#how-it-works)
+- [Note templates](#note-templates)
 - [Installation](#installation)
-- [Key Features in Action](#key-features-in-action)
-- [System Architecture](#system-architecture)
-- [For Developers](#for-developers)
-- [ONOS PRO](#onos-pro)
-- [Contributing](#contributing)
-- [License](#license)
+- [Building from source](#building-from-source)
+- [Where your data lives](#where-your-data-lives)
+- [Architecture](#architecture)
+- [Credits](#credits)
 
-</details>
+## How it works
 
-## Introduction
+**Transcription** runs locally via [whisper.cpp](https://github.com/ggerganov/whisper.cpp). The default model is **Whisper large-v3-turbo** (~1.5 GB), downloaded once on first launch. Smaller models (`small`, `medium`, `large-v3-q5_0`) and the faster NVIDIA Parakeet engine are selectable in settings — the app switches between engines freely.
 
-ONOS is a privacy-first AI meeting assistant that runs entirely on your local machine. It captures your meetings, transcribes them in real-time, and generates summaries, all without sending any data to the cloud. This makes it the perfect solution for professionals and enterprises who need to maintain complete control over their sensitive information.
+**Summarization** runs locally too, through a bundled `llama.cpp` sidecar. The default is **Gemma 3 1B**, with **Gemma 3 4B** offered on machines with enough memory. If you'd rather use a hosted model, Ollama, Claude, OpenAI, Groq, OpenRouter, and any OpenAI-compatible endpoint are all supported — but nothing leaves the machine unless you explicitly choose one.
 
-## Why ONOS?
+**Language** defaults to English and remembers whatever you last selected. Whisper supports manual language selection across the full ISO-639-1 set; French is wired through to the note templates.
 
-While there are many meeting transcription tools available, this solution stands out by offering:
+**GPU acceleration** is automatic: Metal on macOS, CUDA or Vulkan on Windows and Linux, with CPU fallback.
 
-- **Privacy First:** All processing happens locally on your device.
-- **Cost-Effective:** Uses open-source AI models instead of expensive APIs.
-- **Flexible:** Works offline and supports multiple meeting platforms.
-- **Customizable:** Self-host and modify for your specific needs.
+## Note templates
 
-<details>
-<summary>The Privacy Problem</summary>
+Templates live in [`frontend/src-tauri/templates/`](frontend/src-tauri/templates/) as plain JSON — each defines a set of sections with an instruction and an output format, so adding your own is a matter of copying a file.
 
-Meeting AI tools create significant privacy and compliance risks across all sectors:
-
-- **$4.4M average cost per data breach** (IBM 2024)
-- **€5.88 billion in GDPR fines** issued by 2025
-- **400+ unlawful recording cases** filed in California this year
-
-Whether you're a defense consultant, enterprise executive, legal professional, or healthcare provider, your sensitive discussions shouldn't live on servers you don't control. Cloud meeting tools promise convenience but deliver privacy nightmares with unclear data storage practices and potential unauthorized access.
-
-**ONOS solves this:** Complete data sovereignty on your infrastructure, zero vendor lock-in, and full control over your sensitive conversations.
-
-</details>
-
-## Features
-
-- **Local First:** All processing is done on your machine. No data ever leaves your computer.
-- **Real-time Transcription:** Get a live transcript of your meeting as it happens.
-- **AI-Powered Summaries:** Generate summaries of your meetings using powerful language models.
-- **Multi-Platform:** Works on macOS, Windows, and Linux.
-- **Open Source:** ONOS is open source and free to use.
-- **Flexible AI Provider Support:** Choose from Ollama (local), Claude, Groq, OpenRouter, or use your own OpenAI-compatible endpoint.
+| Template | Purpose |
+|---|---|
+| `geri_consults.json` | Geriatrics consult note — frailty scale, collateral contacts, functional history |
+| `consults.json` | General consult note |
+| `follow_ups.json` | Follow-up note |
+| `*_french.json` | French-language variants of each |
 
 ## Installation
 
-### 🪟 **Windows**
+No packaged release is published yet — [build from source](#building-from-source) for now. Once builds are posted they will appear under [Releases](https://github.com/NicholasJYee/onos-app/releases).
 
-1. Download the latest `x64-setup.exe` from [Releases](https://github.com/Zackriya-Solutions/meeting-minutes/releases/latest)
-2. Run the installer
+macOS builds are signed and notarized, so they open normally. Windows builds are currently unsigned and will show a SmartScreen warning — choose **More info → Run anyway**.
 
-### 🍎 **macOS**
+## Building from source
 
-1. Download `onos_0.2.1_aarch64.dmg` from [Releases](https://github.com/Zackriya-Solutions/meeting-minutes/releases/latest)
-2. Open the downloaded `.dmg` file
-3. Drag **ONOS** to your Applications folder
-4. Open **ONOS** from Applications folder
-
-### 🐧 **Linux**
-
-Build from source following our detailed guides:
-
-- [Building on Linux](docs/building_in_linux.md)
-- [General Build Instructions](docs/BUILDING.md)
-
-**Quick start:**
+Requires [Rust](https://rustup.rs/), Node 20, [pnpm](https://pnpm.io/), and CMake.
 
 ```bash
-git clone https://github.com/Zackriya-Solutions/meeting-minutes
-cd meeting-minutes/frontend
+git clone https://github.com/NicholasJYee/onos-app.git
+cd onos-app/frontend
 pnpm install
-./build-gpu.sh
+pnpm build:mac      # or: pnpm build:win
 ```
 
-## Key Features in Action
+Artifacts land in `target/<triple>/release/bundle/`.
 
-### 🎯 Local Transcription
+Both scripts pass an explicit `--target`, so macOS and Windows output never share a directory.
 
-Transcribe meetings entirely on your device using **Whisper** or **Parakeet** models. No cloud required.
+<details>
+<summary><b>Signing and notarization (macOS)</b></summary>
 
-<p align="center">
-    <img src="docs/home.png" width="650" style="border-radius: 10px;" alt="ONOS Demo" />
-</p>
+The signing identity lives in `tauri.conf.json`. Notarization credentials are read from the environment and are never committed:
 
-### 🤖 AI-Powered Summaries
+```bash
+export APPLE_API_KEY="<key id>"
+export APPLE_API_ISSUER="<issuer id>"
+export APPLE_API_KEY_PATH="$HOME/.appstoreconnect/AuthKey_<key id>.p8"
+```
 
-Generate meeting summaries with your choice of AI provider. **Ollama** (local) is recommended, with support for Claude, Groq, OpenRouter, and OpenAI.
+With those set, `pnpm build:mac` signs, uploads to Apple, staples the ticket, and packages the `.dmg` in one step. Without them the build still succeeds but skips notarization, producing a `.dmg` that Gatekeeper blocks on other machines.
 
-<p align="center">
-    <img src="docs/summary.png" width="650" style="border-radius: 10px;" alt="Summary generation" />
-</p>
+</details>
 
-<p align="center">
-    <img src="docs/editor1.png" width="650" style="border-radius: 10px;" alt="Editor Summary generation" />
-</p>
+<details>
+<summary><b>A note on build directories</b></summary>
 
-### 🔒 Privacy-First Design
+Don't build inside a cloud-synced folder (Dropbox, Synology Drive, iCloud). `tauri-build` writes thousands of small permission files and `hdiutil` mounts a disk image to create the `.dmg` — neither survives a sync provider reliably. If you must, redirect the build output:
 
-All data stays on your machine. Transcription models, recordings, and transcripts are stored locally.
+```bash
+export CARGO_TARGET_DIR="$HOME/onos-target"
+```
 
-<p align="center">
-    <img src="docs/settings.png" width="650" style="border-radius: 10px;" alt="Local Transcription and storage" />
-</p>
+</details>
 
-### 🌐 Custom OpenAI Endpoint Support
+<details>
+<summary><b>Optional backend</b></summary>
 
-Use your own OpenAI-compatible endpoint for AI summaries. Perfect for organizations with custom AI infrastructure or preferred providers.
+The desktop app is fully standalone. A FastAPI service in [`backend/`](backend/) adds shared meeting storage and server-side summarization for multi-machine setups. See [`backend/README.md`](backend/README.md).
 
-<p align="center">
-    <img src="docs/custom.png" width="650" style="border-radius: 10px;" alt="Custom OpenAI Endpoint Configuration" />
-</p>
+</details>
 
-### 🎙️ Professional Audio Mixing
+## Where your data lives
 
-Capture microphone and system audio simultaneously with intelligent ducking and clipping prevention.
+Everything stays on disk, in the clear, under your control.
 
-<p align="center">
-    <img src="docs/audio.png" width="650" style="border-radius: 10px;" alt="Device selection" />
-</p>
+**macOS**
 
-### ⚡ GPU Acceleration
+```
+~/Library/Application Support/com.onos.ai/
+├── models/                   # Whisper + Gemma weights
+├── meeting_minutes.sqlite    # transcripts, notes, settings
+└── preferences.json
 
-Built-in support for hardware acceleration across platforms:
+~/Movies/onos-recordings/     # audio files
+```
 
-- **macOS**: Apple Silicon (Metal) + CoreML
-- **Windows/Linux**: NVIDIA (CUDA), AMD/Intel (Vulkan)
+**Windows**
 
-Automatically enabled at build time - no configuration needed.
+```
+%APPDATA%\com.onos.ai\
+%USERPROFILE%\Music\onos-recordings\
+```
 
-## System Architecture
+Deleting the app leaves these in place. Remove them by hand to erase everything.
 
-ONOS is a single, self-contained application built with [Tauri](https://tauri.app/). It uses a Rust-based backend to handle all the core logic, and a Next.js frontend for the user interface.
+## Architecture
 
-For more details, see the [Architecture documentation](docs/architecture.md).
+```
+┌──────────────────────── Desktop app (Tauri 2) ────────────────────────┐
+│                                                                       │
+│   Next.js UI  ←──IPC──→  Rust core  ──→  Whisper  (transcription)     │
+│   (React/TS)             (audio,         llama.cpp (summarization)    │
+│                           SQLite)                                      │
+└───────────────────────────────────────────────────────────────────────┘
+```
 
-## For Developers
+Audio capture runs two paths off one pipeline: a mixed stream written to disk, and a VAD-filtered stream sent to Whisper — so only speech is transcribed, cutting inference load substantially.
 
-If you want to contribute to ONOS or build it from source, you'll need to have Rust and Node.js installed. For detailed build instructions, please see the [Building from Source guide](docs/BUILDING.md).
-
-## ONOS Pro
-
-<p align="center">
-    <img src="docs/pv2.1.png" width="650" style="border-radius: 10px;" alt="Upcoming version" />
-</p>
-
-**ONOS PRO** is a professional-grade solution with enhanced accuracy and advanced features for serious users and teams. Built on a different codebase with superior transcription models and enterprise-ready capabilities.
-
-### Key Advantages Over Community Edition:
-
-- **Enhanced Accuracy**: Superior transcription models for professional-grade accuracy
-- **Custom Summary Templates**: Tailor summaries to your specific workflow and needs
-- **Advanced Export Options**: PDF, DOCX, and Markdown exports with formatting
-- **Auto-detect and Join Meetings**: Automatic meeting detection and joining
-- **Speaker Identification**: Distinguish between speakers automatically *(Coming Soon)*
-- **Chat with Meetings**: AI-powered meeting insights and queries *(Coming Soon)*
-- **Calendar Integration**: Seamless integration with your calendar *(Coming Soon)*
-- **Self-Hosted Deployment**: Deploy on your own infrastructure for teams
-- **GDPR Compliance Built-In**: Privacy by design architecture with complete audit trails
-- **Priority Support**: Dedicated support for PRO users
-
-### Who is PRO for?
-
-- **Professionals** who need the highest accuracy for critical meetings
-- **Teams and organizations** (2-100 users) requiring self-hosted deployment
-- **Power users** who need advanced export formats and custom workflows
-- **Compliance-focused organizations** requiring GDPR readiness
-
-> **Note:** ONOS Community Edition remains **free & open source forever** with local transcription, AI summaries, and core features. PRO is a separate professional solution for users who need enhanced accuracy and advanced capabilities.
-
-For organizations needing 100+ users or managed compliance solutions, explore [ONOS Enterprise](https://onos.ai/enterprise/).
-
-**Learn more about pricing and features:** [https://onos.ai/pro/](https://onos.ai/pro/)
+Deeper documentation: [`docs/architecture.md`](docs/architecture.md), [`docs/BUILDING.md`](docs/BUILDING.md), [`docs/GPU_ACCELERATION.md`](docs/GPU_ACCELERATION.md), and [`CLAUDE.md`](CLAUDE.md) for a codebase tour.
 
 ## Contributing
 
-We welcome contributions from the community! If you have any questions or suggestions, please open an issue or submit a pull request. Please follow the established project structure and guidelines. For more details, refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
-
-Thanks for all the contributions. Our community is what makes this project possible.
+Issues and pull requests are welcome. `CONTRIBUTING.md` has the details.
 
 ## License
 
-MIT License - Feel free to use this project for your own purposes.
+MIT — see [LICENSE.md](LICENSE.md).
 
-## Acknowledgments
+## Credits
 
-- We borrowed some code from [Whisper.cpp](https://github.com/ggerganov/whisper.cpp).
-- We borrowed some code from [Screenpipe](https://github.com/mediar-ai/screenpipe).
-- We borrowed some code from [transcribe-rs](https://crates.io/crates/transcribe-rs).
-- Thanks to **NVIDIA** for developing the **Parakeet** model.
-- Thanks to [istupakov](https://huggingface.co/istupakov/parakeet-tdt-0.6b-v3-onnx) for providing the **ONNX conversion** of the Parakeet model.
+ONOS is built on top of **[Meetily](https://github.com/Zackriya-Solutions/meetily)** by [Zackriya Solutions](https://github.com/Zackriya-Solutions) — an open-source, privacy-first meeting assistant. Their work provided the audio pipeline, the local transcription and summarization architecture, and the Tauri application foundation that this project is adapted from. ONOS narrows that general-purpose meeting tool into a clinical documentation workflow.
 
-## Star History
+If this project is useful to you, please consider starring [their repository](https://github.com/Zackriya-Solutions/meetily) as well.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Zackriya-Solutions/meeting-minutes&type=Date)](https://star-history.com/#Zackriya-Solutions/meeting-minutes&Date)
+Also built on [whisper.cpp](https://github.com/ggerganov/whisper.cpp) and [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov, and [Tauri](https://tauri.app/).

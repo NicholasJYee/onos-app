@@ -13,7 +13,7 @@
         "tauri:build": "node scripts/tauri-auto.js build",
         "build:mac": "node node_modules/@tauri-apps/cli/tauri.js build --target aarch64-apple-darwin",
         "build:win": "node node_modules/@tauri-apps/cli/tauri.js build --target x86_64-pc-windows-msvc --features vulkan",
-        "build:ios": "node node_modules/@tauri-apps/cli/tauri.js ios build",
+        "build:ios": "node node_modules/@tauri-apps/cli/tauri.js ios build --target aarch64",
         "dev:ios": "node node_modules/@tauri-apps/cli/tauri.js ios dev",
         "tauri:dev:cpu": "tauri dev",
         "tauri:dev:cuda": "tauri dev -- --features cuda",

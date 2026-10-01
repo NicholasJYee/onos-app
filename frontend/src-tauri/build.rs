@@ -23,6 +23,8 @@ fn main() {
         // iOS must not link Cocoa.
         println!("cargo:rustc-link-lib=framework=AVFoundation");
         println!("cargo:rustc-link-lib=framework=Foundation");
+        // ggml builds its BLAS/vDSP backend against Accelerate.
+        println!("cargo:rustc-link-lib=framework=Accelerate");
     }
 
     // Bundle FFmpeg only for desktop targets.

@@ -9,6 +9,17 @@ use crate::llama_bridge::{LlamaConfig, LlamaState};
 #[cfg(not(target_os = "ios"))]
 pub mod parakeet_engine;
 
+// iOS links the Rust code as a static library, and Xcode drives the final link
+// from gen/apple/project.yml rather than from cargo's directives. ggml compiles
+// its BLAS and vDSP backends against Accelerate, so without this the link fails
+// on cblas_sgemm and the vDSP_* symbols. Declaring the framework here embeds an
+// LC_LINKER_OPTION in the object file, which the linker auto-links - the same
+// mechanism coreaudio-sys uses to pull in CoreAudio. This keeps the requirement
+// in the crate, so regenerating the Xcode project cannot drop it.
+#[cfg(target_os = "ios")]
+#[link(name = "Accelerate", kind = "framework")]
+extern "C" {}
+
 // Performance optimization: Conditional logging macros for hot paths
 #[cfg(debug_assertions)]
 macro_rules! perf_debug {

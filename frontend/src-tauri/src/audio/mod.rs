@@ -2,7 +2,14 @@
 pub mod audio_processing;
 pub mod encode;
 pub mod ffmpeg;
+#[cfg(not(target_os = "ios"))]
 pub mod vad;
+// iOS uses a pass-through VAD: Silero depends on ONNX Runtime, which has no
+// iOS build. Re-exported as `vad` so callers are unchanged.
+#[cfg(target_os = "ios")]
+pub mod vad_ios;
+#[cfg(target_os = "ios")]
+pub use vad_ios as vad;
 
 // Modularized device management
 pub mod devices;

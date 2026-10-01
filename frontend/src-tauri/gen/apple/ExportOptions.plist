@@ -4,14 +4,18 @@
 <dict>
     <!--
       Without teamID, xcodebuild falls back to a placeholder identity
-      ("Apple Distribution: Tauri (unset)") and the resulting .ipa will not
-      install on a device. 4A68G9PFQZ is the team that issued the
-      Apple Development certificate Xcode selects for this project.
+      ("Apple Distribution: Tauri (unset)") and the .ipa will not install.
+
+      This must match DEVELOPMENT_TEAM in the Xcode project (CML5RHJMX4),
+      not the team that issued the signing certificate. The Apple Development
+      cert here belongs to 4A68G9PFQZ, and using that value fails with
+      "No Account for Team" because the provisioning profile and app ID
+      prefix are owned by CML5RHJMX4.
     -->
     <key>method</key>
     <string>debugging</string>
     <key>teamID</key>
-    <string>4A68G9PFQZ</string>
+    <string>CML5RHJMX4</string>
     <key>signingStyle</key>
     <string>automatic</string>
     <key>stripSwiftSymbols</key>

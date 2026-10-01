@@ -61,6 +61,11 @@ targets:
         RUST_LOG: info
     settings:
       base:
+        # cargo must walk the source tree (reading .gitignore files) to compute
+        # its build fingerprint. Xcode's user script sandbox blocks that, so the
+        # Build Rust Code phase fails with "failed to determine package
+        # fingerprint ... Failed to update the excludes stack".
+        ENABLE_USER_SCRIPT_SANDBOXING: false
         ENABLE_BITCODE: false
         ARCHS: [arm64]
         VALID_ARCHS: arm64 

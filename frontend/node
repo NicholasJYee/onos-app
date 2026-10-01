@@ -1,0 +1,17 @@
+Detected connected device: Y (iPhone17,2) with target "aarch64-apple-ios"
+
+> onos@0.2.1 dev /Users/Y/Library/CloudStorage/SynologyDrive-SynologyDrive/1FARIL/ONOS_service/frontend
+> next dev -p 3118
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3118
+
+ ✓ Starting...
+ ✓ Ready in 1064ms
+Building app...
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -allowProvisioningUpdates -destination id=00008140-00051538140B001C -scheme onos_iOS -workspace /Users/Y/Library/CloudStorage/SynologyDrive-SynologyDrive/1FARIL/ONOS_service/frontend/src-tauri/gen/apple/onos.xcodeproj/project.xcworkspace/ -sdk iphoneos -configuration debug build
+
+Build settings from command line:
+    SDKROOT = iphoneos26.5
+

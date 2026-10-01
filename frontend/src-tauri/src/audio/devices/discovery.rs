@@ -25,9 +25,16 @@ pub async fn list_audio_devices() -> Result<Vec<AudioDevice>> {
         {
             platform::configure_macos_audio(&host)?
         }
+
+        #[cfg(target_os = "ios")]
+        {
+            platform::configure_ios_audio(&host)?
+        }
     };
 
-    // Add any additional devices from the default host
+    // Add any additional devices from the default host.
+    // Skipped on iOS, where there is nothing capturable beyond the routed input.
+    #[cfg(not(target_os = "ios"))]
     if let Ok(other_devices) = host.devices() {
         for device in other_devices {
             if let Ok(name) = device.name() {

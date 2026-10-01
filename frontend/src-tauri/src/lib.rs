@@ -56,6 +56,7 @@ pub mod groq;
 pub mod openrouter;
 pub mod state;
 pub mod summary;
+#[cfg(not(target_os = "ios"))]
 pub mod tray;
 pub mod utils;
 pub mod whisper_engine;
@@ -132,6 +133,7 @@ async fn start_recording<R: Runtime>(
     {
         Ok(_) => {
             RECORDING_FLAG.store(true, Ordering::SeqCst);
+            #[cfg(not(target_os = "ios"))]
             tray::update_tray_menu(&app);
 
             log_info!("Recording started successfully");
@@ -184,6 +186,7 @@ async fn stop_recording<R: Runtime>(app: AppHandle<R>, args: RecordingArgs) -> R
     {
         Ok(_) => {
             RECORDING_FLAG.store(false, Ordering::SeqCst);
+            #[cfg(not(target_os = "ios"))]
             tray::update_tray_menu(&app);
 
             // Create the save directory if it doesn't exist
@@ -221,6 +224,7 @@ async fn stop_recording<R: Runtime>(app: AppHandle<R>, args: RecordingArgs) -> R
             log_error!("Failed to stop audio recording: {}", e);
             // Still update the flag even if stopping failed
             RECORDING_FLAG.store(false, Ordering::SeqCst);
+            #[cfg(not(target_os = "ios"))]
             tray::update_tray_menu(&app);
             Err(format!("Failed to stop recording: {}", e))
         }
@@ -464,7 +468,8 @@ pub fn run() {
             // Restore the user's last-used transcription language
             load_language_preference(&_app.handle());
 
-            // Initialize system tray
+            // Initialize system tray (desktop only)
+            #[cfg(not(target_os = "ios"))]
             if let Err(e) = tray::create_tray(_app.handle()) {
                 log::error!("Failed to create system tray: {}", e);
             }
@@ -506,10 +511,12 @@ pub fn run() {
             });
 
             // Set Parakeet models directory
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::set_models_directory(&_app.handle());
 
             // Initialize Parakeet engine on startup
             tauri::async_runtime::spawn(async {
+                #[cfg(not(target_os = "ios"))]
                 if let Err(e) = parakeet_engine::commands::parakeet_init().await {
                     log::error!("Failed to initialize Parakeet engine on startup: {}", e);
                 }
@@ -600,19 +607,33 @@ pub fn run() {
             whisper_engine::commands::whisper_cancel_download,
             whisper_engine::commands::whisper_delete_corrupted_model,
             // Parakeet engine commands
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_init,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_get_available_models,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_load_model,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_get_current_model,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_is_model_loaded,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_has_available_models,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_validate_model_ready,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_transcribe_audio,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_get_models_directory,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_download_model,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_retry_download,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_cancel_download,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::parakeet_delete_corrupted_model,
+            #[cfg(not(target_os = "ios"))]
             parakeet_engine::commands::open_parakeet_models_folder,
             // Parallel processing commands
             whisper_engine::parallel_commands::initialize_parallel_processor,

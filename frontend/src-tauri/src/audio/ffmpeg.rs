@@ -1,3 +1,5 @@
+// ffmpeg ships as a sidecar binary, which iOS does not permit (no subprocesses).
+#[cfg(not(target_os = "ios"))]
 use ffmpeg_sidecar::{
     command::ffmpeg_is_installed,
     download::{check_latest_version, download_ffmpeg_package, ffmpeg_download_url, unpack_ffmpeg},
@@ -21,6 +23,13 @@ pub fn find_ffmpeg_path() -> Option<PathBuf> {
     FFMPEG_PATH.as_ref().map(|p| p.clone())
 }
 
+/// iOS bundles no ffmpeg binary, so there is never a path to find.
+#[cfg(target_os = "ios")]
+fn find_ffmpeg_path_internal() -> Option<PathBuf> {
+    None
+}
+
+#[cfg(not(target_os = "ios"))]
 fn find_ffmpeg_path_internal() -> Option<PathBuf> {
     debug!("Starting search for ffmpeg executable");
 
@@ -161,6 +170,7 @@ fn find_ffmpeg_path_internal() -> Option<PathBuf> {
     None // Return None if ffmpeg is not found
 }
 
+#[cfg(not(target_os = "ios"))]
 fn handle_ffmpeg_installation() -> Result<(), anyhow::Error> {
     if ffmpeg_is_installed() {
         debug!("ffmpeg is already installed");
@@ -225,7 +235,7 @@ fn get_ffmpeg_install_dir() -> Result<PathBuf, anyhow::Error> {
 }
 
 // For other platforms, keep your existing installation directory logic
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "ios")))]
 fn get_ffmpeg_install_dir() -> Result<PathBuf, anyhow::Error> {
     // Your existing logic for other platforms
     sidecar_dir().map_err(|e| anyhow::anyhow!(e))

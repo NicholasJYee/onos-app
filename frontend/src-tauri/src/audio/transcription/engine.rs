@@ -14,6 +14,7 @@ use tauri::{AppHandle, Manager, Runtime};
 // Transcription engine abstraction to support multiple providers
 pub enum TranscriptionEngine {
     Whisper(Arc<crate::whisper_engine::WhisperEngine>),  // Direct access (backward compat)
+    #[cfg(not(target_os = "ios"))]
     Parakeet(Arc<crate::parakeet_engine::ParakeetEngine>), // Direct access (backward compat)
     Provider(Arc<dyn TranscriptionProvider>),  // Trait-based (preferred for new code)
 }
@@ -111,6 +112,7 @@ pub async fn validate_transcription_model_ready<R: Runtime>(app: &AppHandle<R>) 
                 }
             }
         }
+        #[cfg(not(target_os = "ios"))]
         "parakeet" => {
             info!("🔍 Validating Parakeet model...");
             // Ensure parakeet engine is initialized first
@@ -184,6 +186,7 @@ pub async fn get_or_init_transcription_engine<R: Runtime>(
 
     // Initialize the appropriate engine based on provider
     match config.provider.as_str() {
+        #[cfg(not(target_os = "ios"))]
         "parakeet" => {
             info!("🦜 Initializing Parakeet transcription engine");
 

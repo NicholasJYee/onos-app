@@ -640,6 +640,7 @@ pub async fn stop_recording<R: Runtime>(
     };
 
     match config.as_deref() {
+        #[cfg(not(target_os = "ios"))]
         Some("parakeet") => {
             info!("🦜 Unloading Parakeet model...");
             let engine_clone = {

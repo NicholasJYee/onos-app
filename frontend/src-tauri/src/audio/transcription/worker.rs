@@ -80,6 +80,7 @@ pub fn start_transcription_task<R: Runtime>(
         for worker_id in 0..NUM_WORKERS {
             let engine_clone = match &transcription_engine {
                 TranscriptionEngine::Whisper(e) => TranscriptionEngine::Whisper(e.clone()),
+                #[cfg(not(target_os = "ios"))]
                 TranscriptionEngine::Parakeet(e) => TranscriptionEngine::Parakeet(e.clone()),
                 TranscriptionEngine::Provider(p) => TranscriptionEngine::Provider(p.clone()),
             };
@@ -155,6 +156,7 @@ pub fn start_transcription_task<R: Runtime>(
                                     // Provider-aware confidence threshold
                                     let confidence_threshold = match &engine_clone {
                                         TranscriptionEngine::Whisper(_) | TranscriptionEngine::Provider(_) => 0.3,
+                                        #[cfg(not(target_os = "ios"))]
                                         TranscriptionEngine::Parakeet(_) => 0.0, // Parakeet has no confidence, accept all
                                     };
 
@@ -485,6 +487,7 @@ async fn transcribe_chunk_with_provider<R: Runtime>(
                 }
             }
         }
+        #[cfg(not(target_os = "ios"))]
         TranscriptionEngine::Parakeet(parakeet_engine) => {
             match parakeet_engine.transcribe_audio(speech_samples).await {
                 Ok(text) => {

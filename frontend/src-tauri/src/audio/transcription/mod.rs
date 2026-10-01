@@ -4,6 +4,7 @@
 
 pub mod provider;
 pub mod whisper_provider;
+#[cfg(not(target_os = "ios"))]
 pub mod parakeet_provider;
 pub mod engine;
 pub mod worker;
@@ -11,6 +12,7 @@ pub mod worker;
 // Re-export commonly used types
 pub use provider::{TranscriptionError, TranscriptionProvider, TranscriptResult};
 pub use whisper_provider::WhisperProvider;
+#[cfg(not(target_os = "ios"))]
 pub use parakeet_provider::ParakeetProvider;
 pub use engine::{
     TranscriptionEngine,

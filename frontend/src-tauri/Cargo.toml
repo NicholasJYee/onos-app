@@ -61,15 +61,16 @@ zip = "2.2"           # ZIP extraction (Windows, macOS)
 tar = "0.4"           # TAR extraction (Linux)
 xz2 = "0.1"           # XZ decompression (Linux)
 
-# Cross-platform audio capture (dont run it on iOS)
+# Desktop-only: ffmpeg runs as a sidecar binary (iOS forbids subprocesses) and
+# Parakeet needs ONNX Runtime, which is not built for iOS.
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-cpal = "0.15.3"
 ffmpeg-sidecar = { git = "https://github.com/nathanbabcock/ffmpeg-sidecar", branch = "main" }
-# Parakeet (ONNX-based fast transcription) dependencies
 ort = { version = "2.0.0-rc.10" }  # ONNX Runtime for Parakeet models
 thiserror = "2.0.16"                # Error handling for Parakeet
 
 [dependencies]
+# Audio capture on every platform, including iOS (CoreAudio/RemoteIO backend)
+cpal = "0.15.3"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 anyhow = "1.0"
@@ -188,6 +189,9 @@ futures-channel = "0.3.31"
 #   --features hipblas  (AMD ROCm)
 #   --features openblas (OpenBLAS optimization, requires BLAS_INCLUDE_DIRS)
 [target.'cfg(target_os = "linux")'.dependencies]
+# tray-icon is needed for tray.rs; without it tauri::tray does not exist and
+# the crate fails to compile for Linux.
+tauri = { version = "2", features = ["tray-icon"] }
 whisper-rs = { version = "0.13.2", features = ["raw-api"] }
 futures-channel = "0.3.31"
 

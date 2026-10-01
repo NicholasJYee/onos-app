@@ -2,7 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!--
+      Without teamID, xcodebuild falls back to a placeholder identity
+      ("Apple Distribution: Tauri (unset)") and the resulting .ipa will not
+      install on a device. 4A68G9PFQZ is the team that issued the
+      Apple Development certificate Xcode selects for this project.
+    -->
     <key>method</key>
     <string>debugging</string>
+    <key>teamID</key>
+    <string>4A68G9PFQZ</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>stripSwiftSymbols</key>
+    <true/>
 </dict>
 </plist>

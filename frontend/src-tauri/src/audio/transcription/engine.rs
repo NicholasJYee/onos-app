@@ -32,6 +32,7 @@ impl TranscriptionEngine {
     pub async fn is_model_loaded(&self) -> bool {
         match self {
             Self::Whisper(engine) => engine.is_model_loaded().await,
+            #[cfg(not(target_os = "ios"))]
             Self::Parakeet(engine) => engine.is_model_loaded().await,
             Self::Provider(provider) => provider.is_model_loaded().await,
         }
@@ -41,6 +42,7 @@ impl TranscriptionEngine {
     pub async fn get_current_model(&self) -> Option<String> {
         match self {
             Self::Whisper(engine) => engine.get_current_model().await,
+            #[cfg(not(target_os = "ios"))]
             Self::Parakeet(engine) => engine.get_current_model().await,
             Self::Provider(provider) => provider.get_current_model().await,
         }
@@ -50,6 +52,7 @@ impl TranscriptionEngine {
     pub fn provider_name(&self) -> &str {
         match self {
             Self::Whisper(_) => "Whisper (direct)",
+            #[cfg(not(target_os = "ios"))]
             Self::Parakeet(_) => "Parakeet (direct)",
             Self::Provider(provider) => provider.provider_name(),
         }

@@ -199,7 +199,10 @@ futures-channel = "0.3.31"
 # iOS-specific dependencies
 [target.'cfg(target_os = "ios")'.dependencies]
 llama-helper = { path = "../../llama-helper", package = "llama-helper", default-features = false, features = ["metal"] }
-whisper-rs = { version = "0.13.2", features = ["raw-api"] }
+# Metal, as on macOS. Without it Whisper runs CPU-only, which is painful on a
+# phone. CoreML is deliberately omitted: it needs separately converted encoder
+# models that are not shipped yet.
+whisper-rs = { version = "0.13.2", features = ["raw-api", "metal"] }
 futures-channel = "0.3.31"
 
 

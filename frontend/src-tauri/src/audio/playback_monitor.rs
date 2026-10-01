@@ -29,6 +29,18 @@ pub async fn get_active_audio_output() -> Result<AudioOutputInfo> {
     {
         get_linux_output().await
     }
+
+    // iOS routes audio itself and exposes no selectable output device, so
+    // report the system default rather than probing.
+    #[cfg(target_os = "ios")]
+    {
+        Ok(AudioOutputInfo {
+            device_name: "System Output".to_string(),
+            is_bluetooth: false,
+            sample_rate: None,
+            device_type: "ios-default".to_string(),
+        })
+    }
 }
 
 #[cfg(target_os = "macos")]

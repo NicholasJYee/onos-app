@@ -40,6 +40,9 @@ fn detect_and_report_gpu_capabilities() {
     println!("cargo:warning=🚀 Building ONOS for: {}", target_os);
 
     match target_os.as_str() {
+        "ios" => {
+            println!("cargo:warning=✅ iOS: Metal GPU acceleration ENABLED");
+        }
         "macos" => {
             println!("cargo:warning=✅ macOS: Metal GPU acceleration ENABLED by default");
             #[cfg(feature = "coreml")]

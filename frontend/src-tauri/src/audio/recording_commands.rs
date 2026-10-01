@@ -295,6 +295,7 @@ pub async fn start_recording_with_meeting_name<R: Runtime>(
     })).map_err(|e| e.to_string())?;
 
     // Update tray menu to reflect recording state
+    #[cfg(not(target_os = "ios"))]
     crate::tray::update_tray_menu(&app);
 
     info!("✅ Recording started successfully with async-first approach");
@@ -466,6 +467,7 @@ pub async fn start_recording_with_devices_and_meeting<R: Runtime>(
     })).map_err(|e| e.to_string())?;
 
     // Update tray menu to reflect recording state
+    #[cfg(not(target_os = "ios"))]
     crate::tray::update_tray_menu(&app);
 
     info!("✅ Recording started with custom devices using async-first approach");
@@ -885,6 +887,7 @@ pub async fn stop_recording<R: Runtime>(
     .map_err(|e| e.to_string())?;
 
     // Update tray menu to reflect stopped state
+    #[cfg(not(target_os = "ios"))]
     crate::tray::update_tray_menu(&app);
 
     info!("🎉 Recording stopped successfully with ZERO transcript chunks lost");
@@ -930,6 +933,7 @@ pub async fn pause_recording<R: Runtime>(app: AppHandle<R>) -> Result<(), String
         .map_err(|e| e.to_string())?;
 
         // Update tray menu to reflect paused state
+        #[cfg(not(target_os = "ios"))]
         crate::tray::update_tray_menu(&app);
 
         info!("Recording paused successfully");
@@ -964,6 +968,7 @@ pub async fn resume_recording<R: Runtime>(app: AppHandle<R>) -> Result<(), Strin
         .map_err(|e| e.to_string())?;
 
         // Update tray menu to reflect resumed state
+        #[cfg(not(target_os = "ios"))]
         crate::tray::update_tray_menu(&app);
 
         info!("Recording resumed successfully");

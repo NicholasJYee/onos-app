@@ -5,8 +5,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import type { PermissionStatus, OnboardingPermissions } from '@/types/onboarding';
 
-// Default transcription model (Whisper large-v3-turbo, ~1549 MB)
-const TRANSCRIPTION_MODEL = 'large-v3-turbo';
+import {
+  getDefaultTranscriptionModel,
+  isTranscriptionModel,
+} from '@/lib/transcriptionModel';
 
 interface OnboardingStatus {
   version: string;
@@ -210,7 +212,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       'model-download-progress',
       (event) => {
         const { modelName, progress, downloaded_mb, total_mb, speed_mbps, status } = event.payload;
-        if (modelName === TRANSCRIPTION_MODEL) {
+        if (isTranscriptionModel(modelName)) {
           setParakeetProgress(progress);
           setParakeetProgressInfo({
             percent: progress,
@@ -229,7 +231,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       'model-download-complete',
       (event) => {
         const { modelName } = event.payload;
-        if (modelName === TRANSCRIPTION_MODEL) {
+        if (isTranscriptionModel(modelName)) {
           setParakeetDownloaded(true);
           setParakeetProgress(100);
         }
@@ -240,7 +242,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       'model-download-error',
       (event) => {
         const { modelName } = event.payload;
-        if (modelName === TRANSCRIPTION_MODEL) {
+        if (isTranscriptionModel(modelName)) {
           console.error('Transcription model download error:', event.payload.error);
         }
       }
@@ -431,7 +433,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Start Parakeet download first (speech recognition - always required)
       if (!parakeetDownloaded) {
         console.log('[OnboardingContext] Starting Whisper download');
-        invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL })
+        getDefaultTranscriptionModel()
+          .then(modelName => invoke('whisper_download_model', { modelName }))
           .catch(err => console.error('[OnboardingContext] Whisper download failed:', err));
       }
 
@@ -471,7 +474,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const retryParakeetDownload = async () => {
     console.log('[OnboardingContext] Retrying transcription model download');
     try {
-      await invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL });
+      await invoke('whisper_download_model', {
+        modelName: await getDefaultTranscriptionModel(),
+      });
     } catch (error) {
       console.error('[OnboardingContext] Retry failed:', error);
       throw error;

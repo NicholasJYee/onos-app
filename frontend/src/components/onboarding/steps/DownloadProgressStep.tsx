@@ -8,9 +8,12 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Default transcription model (Whisper large-v3-turbo)
-const TRANSCRIPTION_MODEL = 'large-v3-turbo';
-const TRANSCRIPTION_MODEL_MB = 1549;
+import {
+  DESKTOP_TRANSCRIPTION_MODEL,
+  TRANSCRIPTION_MODEL_SIZE_MB,
+  getDefaultTranscriptionModel,
+  isTranscriptionModel,
+} from '@/lib/transcriptionModel';
 
 type DownloadStatus = 'waiting' | 'downloading' | 'completed' | 'error';
 
@@ -49,7 +52,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     status: parakeetDownloaded ? 'completed' : 'waiting',
     progress: parakeetDownloaded ? 100 : 0,
     downloadedMb: 0,
-    totalMb: TRANSCRIPTION_MODEL_MB,
+    totalMb: TRANSCRIPTION_MODEL_SIZE_MB[DESKTOP_TRANSCRIPTION_MODEL],
     speedMbps: 0,
   });
 
@@ -88,7 +91,9 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     }));
 
     try {
-      await invoke('whisper_download_model', { modelName: TRANSCRIPTION_MODEL });
+      await invoke('whisper_download_model', {
+        modelName: await getDefaultTranscriptionModel(),
+      });
       // Progress events will update state
     } catch (error) {
       console.error('[DownloadProgressStep] Retry failed:', error);
@@ -197,7 +202,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
       status?: string;
     }>('model-download-progress', (event) => {
       const { modelName, progress, downloaded_mb, total_mb, speed_mbps, status } = event.payload;
-      if (modelName === TRANSCRIPTION_MODEL) {
+      if (isTranscriptionModel(modelName)) {
         setParakeetState((prev) => {
           const totalMb = total_mb ?? prev.totalMb;
           return {
@@ -221,7 +226,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     const unlistenComplete = listen<{ modelName: string }>(
       'model-download-complete',
       (event) => {
-        if (event.payload.modelName === TRANSCRIPTION_MODEL) {
+        if (isTranscriptionModel(event.payload.modelName)) {
           setParakeetState((prev) => ({ ...prev, status: 'completed', progress: 100 }));
           setParakeetDownloaded(true);
         }
@@ -231,7 +236,7 @@ export function DownloadProgressStep({ embedded = false }: DownloadProgressStepP
     const unlistenError = listen<{ modelName: string; error: string }>(
       'model-download-error',
       (event) => {
-        if (event.payload.modelName === TRANSCRIPTION_MODEL) {
+        if (isTranscriptionModel(event.payload.modelName)) {
           setParakeetState((prev) => ({
             ...prev,
             status: 'error',

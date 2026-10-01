@@ -11,6 +11,14 @@ use tauri::{AppHandle, Manager, Runtime};
 // TRANSCRIPTION ENGINE ENUM
 // ============================================================================
 
+/// Default local transcription model.
+/// iOS uses `small` (~466 MB): large-v3-turbo is 1.5 GB, which is a lot to
+/// download and hold in memory on a phone alongside the summary model.
+#[cfg(target_os = "ios")]
+pub const DEFAULT_WHISPER_MODEL: &str = "small";
+#[cfg(not(target_os = "ios"))]
+pub const DEFAULT_WHISPER_MODEL: &str = "large-v3-turbo";
+
 // Transcription engine abstraction to support multiple providers
 pub enum TranscriptionEngine {
     Whisper(Arc<crate::whisper_engine::WhisperEngine>),  // Direct access (backward compat)
@@ -73,7 +81,7 @@ pub async fn validate_transcription_model_ready<R: Runtime>(app: &AppHandle<R>) 
             info!("📝 No transcript config found, defaulting to Whisper large-v3-turbo");
             crate::api::api::TranscriptConfig {
                 provider: "localWhisper".to_string(),
-                model: "large-v3-turbo".to_string(),
+                model: DEFAULT_WHISPER_MODEL.to_string(),
                 api_key: None,
             }
         }
@@ -81,7 +89,7 @@ pub async fn validate_transcription_model_ready<R: Runtime>(app: &AppHandle<R>) 
             warn!("⚠️ Failed to get transcript config: {}, defaulting to Whisper large-v3-turbo", e);
             crate::api::api::TranscriptConfig {
                 provider: "localWhisper".to_string(),
-                model: "large-v3-turbo".to_string(),
+                model: DEFAULT_WHISPER_MODEL.to_string(),
                 api_key: None,
             }
         }
@@ -170,7 +178,7 @@ pub async fn get_or_init_transcription_engine<R: Runtime>(
             info!("📝 No transcript config found, defaulting to Whisper large-v3-turbo");
             crate::api::api::TranscriptConfig {
                 provider: "localWhisper".to_string(),
-                model: "large-v3-turbo".to_string(),
+                model: DEFAULT_WHISPER_MODEL.to_string(),
                 api_key: None,
             }
         }
@@ -178,7 +186,7 @@ pub async fn get_or_init_transcription_engine<R: Runtime>(
             warn!("⚠️ Failed to get transcript config: {}, defaulting to Whisper large-v3-turbo", e);
             crate::api::api::TranscriptConfig {
                 provider: "localWhisper".to_string(),
-                model: "large-v3-turbo".to_string(),
+                model: DEFAULT_WHISPER_MODEL.to_string(),
                 api_key: None,
             }
         }

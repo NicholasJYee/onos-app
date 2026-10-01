@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+	<!--
+	  Gemma 3 4B is ~2.5 GB resident, on top of WKWebView and the Whisper model.
+	  iOS caps a foreground app's memory well below physical RAM and jetsams
+	  anything that exceeds it, so both of these are required for the summary
+	  model to load on supported devices.
+	-->
+	<key>com.apple.developer.kernel.increased-memory-limit</key>
+	<true/>
+	<key>com.apple.developer.kernel.extended-virtual-addressing</key>
+	<true/>
+</dict>
 </plist>

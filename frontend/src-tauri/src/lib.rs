@@ -441,6 +441,10 @@ pub fn get_language_preference_internal() -> Option<String> {
     LANGUAGE_PREFERENCE.lock().ok().map(|lang| lang.clone())
 }
 
+/// On mobile, Xcode links the static library and calls this through the
+/// generated entry point rather than a main(); the attribute emits the symbols
+/// the iOS target expects. Inert on desktop, where tauri-build sets cfg(desktop).
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     log::set_max_level(log::LevelFilter::Info);
 

@@ -583,7 +583,7 @@ function ModelCard({
             </div>
 
             {/* Model Specs */}
-            <div className="flex items-center space-x-4 text-sm text-gray-600 ml-9 mt-1.5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 ml-0 sm:ml-9 mt-1.5">
               <span className="flex items-center space-x-1">
                 <span>📦</span>
                 <span>{formatFileSize(model.size_mb)}</span>

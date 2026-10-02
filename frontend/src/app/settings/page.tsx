@@ -11,6 +11,7 @@ import { PreferenceSettings } from '@/components/PreferenceSettings';
 import { SummaryModelSettings } from '@/components/SummaryModelSettings';
 import { useConfig } from '@/contexts/ConfigContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useIsIOS } from '@/hooks/usePlatform';
 
 // Tabs configuration (constant)
 const TABS = [
@@ -23,6 +24,7 @@ const TABS = [
 export default function SettingsPage() {
   const router = useRouter();
   const { transcriptModelConfig, setTranscriptModelConfig } = useConfig();
+  const isIOS = useIsIOS();
 
   // Animation state for tabs
   const [activeTab, setActiveTab] = useState('general');
@@ -61,7 +63,7 @@ export default function SettingsPage() {
   }, [activeTab]);
 
   return (
-    <div className="h-dvh bg-gray-50 flex flex-col">
+    <div className={`${isIOS ? 'min-h-dvh' : 'h-dvh'} bg-gray-50 flex flex-col`}>
       {/* Fixed Header */}
       <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
@@ -79,7 +81,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className={isIOS ? '' : 'flex-1 min-h-0 overflow-y-auto'}>
         <div className="max-w-6xl mx-auto p-4 sm:p-8 pt-4 sm:pt-6">
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>

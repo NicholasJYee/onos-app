@@ -145,6 +145,16 @@
     height: 100%;
   }
 
+  /* On touch devices let the document scroll. The pinned-body + inner-pane
+     pattern above is a desktop-window convention and leaves content
+     unreachable in WKWebView. */
+  @media (hover: none) and (pointer: coarse) {
+    body {
+      overflow-y: auto;
+      height: auto;
+    }
+  }
+
   /* Make the window draggable */
   .titlebar {
     -webkit-app-region: drag;

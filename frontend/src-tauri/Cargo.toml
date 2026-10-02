@@ -169,7 +169,7 @@ futures-channel = "0.3.31"
 
 # PERFORMANCE: Enable Metal GPU + CoreML acceleration automatically on macOS
 # CoreML provides additional acceleration for Apple Silicon chips
-whisper-rs = { version = "0.13.2", features = ["raw-api", "metal", "coreml"] }
+whisper-rs = { version = "0.16.0", features = ["raw-api", "metal", "coreml"] }
 
 # Windows-specific dependencies
 # Default: CPU-only build (no BLAS)
@@ -178,7 +178,7 @@ whisper-rs = { version = "0.13.2", features = ["raw-api", "metal", "coreml"] }
 #   --features vulkan   (AMD/Intel GPUs)
 #   --features openblas (OpenBLAS optimization, requires BLAS_INCLUDE_DIRS)
 [target.'cfg(target_os = "windows")'.dependencies]
-whisper-rs = { version = "0.13.2", features = ["raw-api", "vulkan"] }
+whisper-rs = { version = "0.16.0", features = ["raw-api", "vulkan"] }
 futures-channel = "0.3.31"
 
 # Linux-specific dependencies
@@ -192,7 +192,7 @@ futures-channel = "0.3.31"
 # tray-icon is needed for tray.rs; without it tauri::tray does not exist and
 # the crate fails to compile for Linux.
 tauri = { version = "2", features = ["macos-private-api", "protocol-asset", "tray-icon"] }
-whisper-rs = { version = "0.13.2", features = ["raw-api"] }
+whisper-rs = { version = "0.16.0", features = ["raw-api"] }
 futures-channel = "0.3.31"
 
 # iOS-specific dependencies
@@ -207,10 +207,29 @@ futures-channel = "0.3.31"
 # set")`, so the app aborts the moment the webview requests its first asset.
 tauri = { version = "2", features = ["tray-icon", "macos-private-api", "protocol-asset", "rustls-tls"] }
 llama-helper = { path = "../../llama-helper", package = "llama-helper", default-features = false, features = ["metal"] }
+#
+# INVARIANT: whisper-rs and llama-helper's ggml MUST stay on the same upstream
+# sync. iOS is the only target that links both engines into one binary (desktop
+# runs llama-helper as a subprocess instead), and whisper.cpp and llama.cpp each
+# vendor their own copy of ggml, exporting the same C symbols. The linker keeps
+# one copy of each `ggml_*` symbol and silently splices the two engines together.
+#
+# When the versions drift, that splice is an ABI mismatch rather than a link
+# error. whisper-rs 0.13 (whisper-rs-sys 0.11.1) against llama-cpp-sys-2 0.1.133
+# differed by a single field -- `int api_version` was prepended to
+# `struct ggml_backend_reg` -- so llama's `register_backend()` read whisper's
+# `iface` one pointer too high, called the wrong function through it, and
+# `GGML_ASSERT` aborted the app the moment a WhisperContext was created (i.e. on
+# every tap of the record button).
+#
+# whisper-rs-sys 0.15.0 and llama-cpp-sys-2 0.1.133 vendor a byte-identical ggml
+# (verify with scripts/check-ggml-sync.sh), which makes the duplicate symbols
+# harmless. Run that script after bumping EITHER crate.
+#
 # Metal, as on macOS. Without it Whisper runs CPU-only, which is painful on a
 # phone. CoreML is deliberately omitted: it needs separately converted encoder
 # models that are not shipped yet.
-whisper-rs = { version = "0.13.2", features = ["raw-api", "metal"] }
+whisper-rs = { version = "0.16.0", features = ["raw-api", "metal"] }
 futures-channel = "0.3.31"
 # Objective-C runtime, used to configure AVAudioSession. iOS refuses microphone
 # input unless the session category is set to record/playAndRecord and the

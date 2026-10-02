@@ -161,9 +161,26 @@ echo "==> Pinning signing: $signing_certificate / profile \"$profile_name\" / $b
 restore_dir="$(mktemp -d)"
 cp "$pbxproj" "$restore_dir/project.pbxproj"
 cp "$export_options" "$restore_dir/ExportOptions.plist"
+
+# tauri writes every export to ONOS.ipa, so this build is about to overwrite the
+# device-installable one from `pnpm build:ios`. Move it out of the way first and
+# put it back afterwards, otherwise a TestFlight run silently destroys it.
+device_ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS.ipa"
+preserved_device_ipa=""
+if [ -f "$device_ipa" ]; then
+    preserved_device_ipa="$restore_dir/ONOS-device.ipa"
+    mv "$device_ipa" "$preserved_device_ipa"
+    echo "==> Set aside the existing device .ipa while this build runs"
+fi
+
 restore_signing() {
     cp "$restore_dir/project.pbxproj" "$pbxproj"
     cp "$restore_dir/ExportOptions.plist" "$export_options"
+    # Runs after the App Store .ipa has been renamed, so this cannot clobber it.
+    if [ -n "$preserved_device_ipa" ] && [ -f "$preserved_device_ipa" ]; then
+        mv "$preserved_device_ipa" "$device_ipa"
+        echo "==> Restored the device .ipa"
+    fi
     rm -rf "$restore_dir"
     echo "==> Restored project signing settings"
 }
@@ -207,10 +224,9 @@ node node_modules/@tauri-apps/cli/tauri.js ios build --target aarch64 --export-m
 # refuses to sideload ("Attempted to install a Beta profile without the proper
 # entitlement", 0xe800801f) and a device build is rejected by App Store Connect.
 # Keep this one under its own name so both survive and neither is ambiguous.
-built_ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS.ipa"
 ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS-testflight-${build_number}.ipa"
-if [ -f "$built_ipa" ]; then
-    mv "$built_ipa" "$ipa"
+if [ -f "$device_ipa" ]; then
+    mv "$device_ipa" "$ipa"
 fi
 
 echo

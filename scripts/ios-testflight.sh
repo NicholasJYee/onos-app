@@ -158,6 +158,17 @@ fi
 
 echo "==> Pinning signing: $signing_certificate / profile \"$profile_name\" / $bundle_id ($team_id)"
 
+# If a previous run was killed before its EXIT trap fired, these files are still
+# in their App Store state. Snapshotting them now would make that permanent and
+# quietly break `pnpm build:ios`, so recover the committed versions first.
+if grep -q "app-store-connect" "$export_options" 2>/dev/null; then
+    echo "==> A previous run left App Store signing in place; recovering committed versions"
+    (cd "$repo_root" && git checkout -- \
+        frontend/src-tauri/gen/apple/ExportOptions.plist \
+        frontend/src-tauri/gen/apple/onos.xcodeproj/project.pbxproj) \
+        || echo "    warning: could not restore from git; check these two files by hand" >&2
+fi
+
 restore_dir="$(mktemp -d)"
 cp "$pbxproj" "$restore_dir/project.pbxproj"
 cp "$export_options" "$restore_dir/ExportOptions.plist"

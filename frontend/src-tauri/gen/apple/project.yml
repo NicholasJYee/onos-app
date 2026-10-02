@@ -54,7 +54,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.2.1
-        CFBundleVersion: "202610021843"
+        CFBundleVersion: "202610021937"
         # The keys below must live here, not only in onos_iOS/Info.plist.
         # XcodeGen generates that file from this block, so anything added to it
         # by hand is discarded the next time someone runs `xcodegen` or

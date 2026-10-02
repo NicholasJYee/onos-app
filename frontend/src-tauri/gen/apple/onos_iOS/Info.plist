@@ -20,6 +20,22 @@
 	<string>0.2.1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>This application needs permission to capture system audio output for meeting transcription and recording.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Development builds load the user interface from a local development server on your network. Release builds do not use the local network.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This application needs access to your microphone to record meeting audio.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>This application needs screen recording permission to capture system audio during meetings.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -40,23 +56,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Development builds load the user interface from a local development server on your network. Release builds do not use the local network.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This application needs access to your microphone to record meeting audio.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-	</array>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
-	<key>NSScreenCaptureUsageDescription</key>
-	<string>This application needs screen recording permission to capture system audio during meetings.</string>
-	<key>NSAudioCaptureUsageDescription</key>
-	<string>This application needs permission to capture system audio output for meeting transcription and recording.</string>
 </dict>
 </plist>

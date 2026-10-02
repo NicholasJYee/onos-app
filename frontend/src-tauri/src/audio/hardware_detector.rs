@@ -82,8 +82,8 @@ impl HardwareProfile {
 
     /// Detect GPU acceleration capabilities
     fn detect_gpu() -> (bool, GpuType) {
-        // Check for Metal (Apple Silicon)
-        #[cfg(target_os = "macos")]
+        // Check for Metal (Apple Silicon, and every iOS device)
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
         {
             if Self::has_metal_support() {
                 return (true, GpuType::Metal);
@@ -118,33 +118,48 @@ impl HardwareProfile {
 
     /// Calculate performance tier based on hardware
     fn calculate_performance_tier(cpu_cores: u8, gpu_type: &GpuType, memory_gb: u8) -> PerformanceTier {
-        match gpu_type {
-            GpuType::Metal => {
-                if memory_gb >= 16 && cpu_cores >= 8 {
-                    PerformanceTier::Ultra
-                } else {
-                    PerformanceTier::High
+        #[cfg(target_os = "ios")]
+        {
+            // A phone has Metal but not a laptop's thermal or battery headroom,
+            // and `detect_memory_gb` only returns a hardcoded estimate, so the
+            // memory/core thresholds below carry no real information here.
+            let _ = (cpu_cores, memory_gb);
+            return match gpu_type {
+                GpuType::Metal => PerformanceTier::Medium,
+                _ => PerformanceTier::Low,
+            };
+        }
+
+        #[cfg(not(target_os = "ios"))]
+        {
+            match gpu_type {
+                GpuType::Metal => {
+                    if memory_gb >= 16 && cpu_cores >= 8 {
+                        PerformanceTier::Ultra
+                    } else {
+                        PerformanceTier::High
+                    }
                 }
-            }
-            GpuType::Cuda => {
-                if memory_gb >= 16 && cpu_cores >= 8 {
-                    PerformanceTier::Ultra
-                } else {
-                    PerformanceTier::High
+                GpuType::Cuda => {
+                    if memory_gb >= 16 && cpu_cores >= 8 {
+                        PerformanceTier::Ultra
+                    } else {
+                        PerformanceTier::High
+                    }
                 }
-            }
-            GpuType::Vulkan | GpuType::OpenCL => {
-                if memory_gb >= 12 && cpu_cores >= 6 {
-                    PerformanceTier::High
-                } else {
-                    PerformanceTier::Medium
+                GpuType::Vulkan | GpuType::OpenCL => {
+                    if memory_gb >= 12 && cpu_cores >= 6 {
+                        PerformanceTier::High
+                    } else {
+                        PerformanceTier::Medium
+                    }
                 }
-            }
-            GpuType::None => {
-                if cpu_cores >= 8 && memory_gb >= 16 {
-                    PerformanceTier::Medium
-                } else {
-                    PerformanceTier::Low
+                GpuType::None => {
+                    if cpu_cores >= 8 && memory_gb >= 16 {
+                        PerformanceTier::Medium
+                    } else {
+                        PerformanceTier::Low
+                    }
                 }
             }
         }
@@ -154,6 +169,13 @@ impl HardwareProfile {
     fn has_metal_support() -> bool {
         // Simple check for Apple Silicon (Metal is available on Intel Macs too, but less optimal for ML)
         std::env::consts::ARCH == "aarch64"
+    }
+
+    /// Every iOS device the app can install on is arm64 with Metal, and the
+    /// bundle declares `metal` in UIRequiredDeviceCapabilities.
+    #[cfg(target_os = "ios")]
+    fn has_metal_support() -> bool {
+        true
     }
 
     fn has_cuda_support() -> bool {

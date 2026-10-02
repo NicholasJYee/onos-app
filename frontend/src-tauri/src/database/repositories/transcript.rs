@@ -104,8 +104,14 @@ impl TranscriptsRepository {
         // Where the existing recording left off. The inner COALESCE covers rows
         // written before the audio timing columns existed, where both are NULL;
         // the outer one covers a meeting with no transcripts at all.
+        //
+        // The CAST matters: with no rows MAX() is NULL and COALESCE falls back
+        // to the literal 0, which SQLite hands back as an INTEGER. sqlx then
+        // refuses to decode it as f64 ("Rust type `f64` (as SQL type `REAL`) is
+        // not compatible with SQL type `INTEGER`"), which broke resuming any
+        // meeting whose transcript was still empty.
         let offset: f64 = sqlx::query_scalar(
-            "SELECT COALESCE(MAX(COALESCE(audio_end_time, audio_start_time, 0)), 0)
+            "SELECT CAST(COALESCE(MAX(COALESCE(audio_end_time, audio_start_time, 0)), 0) AS REAL)
              FROM transcripts WHERE meeting_id = ?",
         )
         .bind(meeting_id)

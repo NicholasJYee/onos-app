@@ -65,6 +65,21 @@ if [ -f "$signing_env" ]; then
     echo "==> Loaded signing config from scripts/ios-signing.env"
 fi
 
+# A stale APPLE_API_KEY_PATH exported in the shell silently outranks the key id
+# configured above, and pairing a key id with another key's .p8 fails as a 401
+# ("Your Apple Account or password was entered incorrectly") deep in the export.
+# Ignore any path that does not belong to the configured key.
+if [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_KEY_PATH:-}" ]; then
+    case "$(basename "$APPLE_API_KEY_PATH")" in
+        *"$APPLE_API_KEY"*) ;;
+        *)
+            echo "==> Ignoring APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH"
+            echo "    (it is not the key file for APPLE_API_KEY=$APPLE_API_KEY)"
+            unset APPLE_API_KEY_PATH
+            ;;
+    esac
+fi
+
 # With a key id but no explicit path, look where Apple's own tools keep keys.
 if [ -n "${APPLE_API_KEY:-}" ] && [ -z "${APPLE_API_KEY_PATH:-}" ]; then
     for candidate in \

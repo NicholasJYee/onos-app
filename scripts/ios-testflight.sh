@@ -209,8 +209,16 @@ if [ -f "$ipa" ]; then
     echo
     echo "Upload it with either:"
     echo "  - Transporter.app (free on the Mac App Store): drag the .ipa in, Deliver"
-    echo "  - xcrun altool --upload-app -f \"$ipa\" -t ios \\"
-    echo "        --apiKey <KEY_ID> --apiIssuer <ISSUER_ID>"
+    echo "  - this command:"
+    echo
+    if [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_ISSUER:-}" ]; then
+        # altool finds the .p8 itself, in the same place this script looks.
+        echo "      xcrun altool --upload-app -f \"$ipa\" -t ios \\"
+        echo "        --apiKey $APPLE_API_KEY --apiIssuer $APPLE_API_ISSUER"
+    else
+        echo "      xcrun altool --upload-app -f \"$ipa\" -t ios \\"
+        echo "        --apiKey <KEY_ID> --apiIssuer <ISSUER_ID>"
+    fi
     echo
     echo "It appears in App Store Connect > TestFlight a few minutes after"
     echo "processing finishes."

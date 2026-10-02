@@ -53,6 +53,20 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.2.1
         CFBundleVersion: "0.2.1"
+        # The keys below must live here, not only in onos_iOS/Info.plist.
+        # XcodeGen generates that file from this block, so anything added to it
+        # by hand is discarded the next time someone runs `xcodegen` or
+        # `cargo tauri ios init`.
+        #
+        # Losing NSMicrophoneUsageDescription in particular is brutal to debug:
+        # iOS terminates the process the instant it touches the microphone, with
+        # a SIGABRT and no Rust backtrace, which reads exactly like a crash in
+        # the audio code.
+        NSMicrophoneUsageDescription: "This application needs access to your microphone to record meeting audio."
+        # Dev builds load the UI from the Next.js dev server over the LAN.
+        NSLocalNetworkUsageDescription: "Development builds load the user interface from a local development server on your network. Release builds do not use the local network."
+        # Keeps capture alive when the app is backgrounded mid-meeting.
+        UIBackgroundModes: [audio]
     entitlements:
       path: onos_iOS/onos_iOS.entitlements
     scheme:

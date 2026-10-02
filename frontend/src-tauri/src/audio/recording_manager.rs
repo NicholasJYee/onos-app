@@ -132,7 +132,26 @@ impl RecordingManager {
         // Pipeline handles mixing and distribution to both recording and transcription
         self.stream_manager.start_streams(microphone_device.clone(), system_device.clone(), None).await?;
 
-        // Start device monitoring to detect disconnects
+        // Start device monitoring to detect disconnects.
+        //
+        // Not started on iOS, where it can only cost. The monitor polls
+        // `list_audio_devices()` and diffs the result, but cpal exposes a single
+        // RemoteIO unit on iOS whose name is the hardcoded string
+        // "Default Device", so the list never changes and no disconnect or
+        // reconnect event can ever fire.
+        //
+        // Meanwhile each poll is far from free: cpal's `input_devices()` filters
+        // on `supported_input_configs()`, which the iOS backend answers by
+        // constructing a RemoteIO audio unit, enabling input on it, initialising
+        // it, reading its stream format and disposing it. That would run every
+        // two seconds against the input hardware the stream above just opened.
+        // The same polling already caused the slow-shutdown problem on Windows
+        // noted in `stop_streams_and_force_flush`.
+        //
+        // Route changes on iOS (headset connected, speaker/receiver switch) are
+        // reported by AVAudioSessionRouteChangeNotification, which is the right
+        // mechanism to use here if this ever needs handling.
+        #[cfg(not(target_os = "ios"))]
         if let Some(ref mut monitor) = self.device_monitor {
             if let Err(e) = monitor.start_monitoring(microphone_device, system_device) {
                 warn!("Failed to start device monitoring: {}", e);
@@ -141,6 +160,10 @@ impl RecordingManager {
                 info!("✅ Device monitoring started");
             }
         }
+
+        // The clones above went to the stream manager; these are the originals.
+        #[cfg(target_os = "ios")]
+        drop((microphone_device, system_device));
 
         info!("Recording manager started successfully with {} active streams",
                self.stream_manager.active_stream_count());

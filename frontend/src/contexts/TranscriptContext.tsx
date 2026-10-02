@@ -7,6 +7,7 @@ import { useRecordingState } from './RecordingStateContext';
 import { transcriptService } from '@/services/transcriptService';
 import { recordingService } from '@/services/recordingService';
 import { indexedDBService } from '@/services/indexedDBService';
+import { isContinueSessionActive } from '@/lib/continueRecordingSession';
 
 interface TranscriptContextType {
   transcripts: Transcript[];
@@ -286,6 +287,15 @@ export function TranscriptProvider({ children }: { children: ReactNode }) {
       try {
         console.log('🔥 Setting up MAIN transcript listener during component initialization...');
         unlistenFn = await transcriptService.onTranscriptUpdate((update) => {
+          // A resumed recording belongs to the meeting page, which collects
+          // these itself and appends them to the meeting being continued.
+          // Without this guard they also land in the home screen's session
+          // state, so going Home after a resume shows the resumed transcript
+          // as though it had just been recorded there.
+          if (isContinueSessionActive()) {
+            return;
+          }
+
           const now = Date.now();
           console.log('🎯 MAIN LISTENER: Received transcript update:', {
             sequence_id: update.sequence_id,

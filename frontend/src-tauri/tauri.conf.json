@@ -102,7 +102,8 @@
             "binaries/ffmpeg"
         ],
         "iOS": {
-            "developmentTeam": "CML5RHJMX4"
+            "developmentTeam": "CML5RHJMX4",
+            "minimumSystemVersion": "15.0"
         },
         "macOS": {
             "entitlements": "entitlements.plist",

@@ -2,7 +2,9 @@ name: onos
 options:
   bundleIdPrefix: com.onos.ai
   deploymentTarget:
-    iOS: 14.0
+    # Apple refuses uploads targeting below 15.0 from April 2027. Keep this in
+    # step with bundle.iOS.minimumSystemVersion in tauri.conf.json.
+    iOS: 15.0
 fileGroups: [../../src]
 configs:
   debug: debug
@@ -52,7 +54,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.2.1
-        CFBundleVersion: "0.2.1"
+        CFBundleVersion: "202610021843"
         # The keys below must live here, not only in onos_iOS/Info.plist.
         # XcodeGen generates that file from this block, so anything added to it
         # by hand is discarded the next time someone runs `xcodegen` or

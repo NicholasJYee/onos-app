@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type Platform = 'macos' | 'windows' | 'linux' | 'unknown';
+export type Platform = 'macos' | 'ios' | 'windows' | 'linux' | 'unknown';
 
 // Extend Window type to include Tauri internals
 declare global {
@@ -16,7 +16,11 @@ function detectPlatformFromUserAgent(): Platform {
   if (typeof navigator === 'undefined') return 'unknown';
 
   const userAgent = navigator.userAgent.toLowerCase();
-  if (userAgent.includes('mac')) {
+  // iOS must be tested first: the iPhone/iPad user agent contains
+  // "like Mac OS X", so a plain 'mac' check matches it too.
+  if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+    return 'ios';
+  } else if (userAgent.includes('mac')) {
     return 'macos';
   } else if (userAgent.includes('win')) {
     return 'windows';
@@ -51,8 +55,10 @@ export function usePlatform(): Platform {
         // Map Tauri's platform names to our simplified types
         switch (platformName) {
           case 'macos':
-          case 'ios':
             setCurrentPlatform('macos');
+            break;
+          case 'ios':
+            setCurrentPlatform('ios');
             break;
           case 'windows':
             setCurrentPlatform('windows');
@@ -83,4 +89,13 @@ export function usePlatform(): Platform {
 export function useIsLinux(): boolean {
   const currentPlatform = usePlatform();
   return currentPlatform === 'linux';
+}
+
+/**
+ * Simple helper to check if the current platform is iOS
+ * @returns true if running on iPhone or iPad
+ */
+export function useIsIOS(): boolean {
+  const currentPlatform = usePlatform();
+  return currentPlatform === 'ios';
 }

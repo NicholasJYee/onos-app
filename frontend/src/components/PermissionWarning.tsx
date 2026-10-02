@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertTriangle, Mic, Speaker, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { invoke } from '@tauri-apps/api/core';
-import { useIsLinux } from '@/hooks/usePlatform';
+import { useIsLinux, useIsIOS } from '@/hooks/usePlatform';
 
 interface PermissionWarningProps {
   hasMicrophone: boolean;
@@ -18,18 +18,25 @@ export function PermissionWarning({
   isRechecking = false
 }: PermissionWarningProps) {
   const isLinux = useIsLinux();
+  const isIOS = useIsIOS();
 
   // Don't show on Linux - permission handling is not needed
   if (isLinux) {
     return null;
   }
 
-  // Don't show if both permissions are granted
-  if (hasMicrophone && hasSystemAudio) {
+  // iOS cannot capture system audio at all -- there is no API for it and no
+  // permission that would grant it -- so only the microphone is relevant there.
+  const systemAudioMissing = !hasSystemAudio && !isIOS;
+
+  // Don't show if every applicable permission is granted
+  if (hasMicrophone && !systemAudioMissing) {
     return null;
   }
 
-  const isMacOS = navigator.userAgent.includes('Mac');
+  // The iPhone user agent contains "like Mac OS X", so this must exclude iOS
+  // explicitly or the macOS settings buttons render on the phone and do nothing.
+  const isMacOS = !isIOS && navigator.userAgent.includes('Mac');
 
   const openMicrophoneSettings = async () => {
     if (isMacOS) {
@@ -54,14 +61,14 @@ export function PermissionWarning({
   return (
     <div className="max-w-md mb-4 space-y-3">
       {/* Combined Permission Warning - Show when either permission is missing */}
-      {(!hasMicrophone || !hasSystemAudio) && (
+      {(!hasMicrophone || systemAudioMissing) && (
         <Alert variant="destructive" className="border-amber-400 bg-amber-50">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
           <AlertTitle className="text-amber-900 font-semibold">
             <div className="flex items-center gap-2">
               {!hasMicrophone && <Mic className="h-4 w-4" />}
-              {!hasSystemAudio && <Speaker className="h-4 w-4" />}
-              {!hasMicrophone && !hasSystemAudio ? 'Permissions Required' : !hasMicrophone ? 'Microphone Permission Required' : 'System Audio Permission Required'}
+              {systemAudioMissing && <Speaker className="h-4 w-4" />}
+              {!hasMicrophone && systemAudioMissing ? 'Permissions Required' : !hasMicrophone ? 'Microphone Permission Required' : 'System Audio Permission Required'}
             </div>
           </AlertTitle>
           {/* Action Buttons */}
@@ -112,7 +119,7 @@ export function PermissionWarning({
             )}
 
             {/* System Audio Warning */}
-            {!hasSystemAudio && (
+            {systemAudioMissing && (
               <>
                 <p className="mb-3">
                   {hasMicrophone

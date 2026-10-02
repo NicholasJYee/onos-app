@@ -78,7 +78,7 @@ export function SettingsModals({
           </div>
 
           {/* Content - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-8">
             {/* General Preferences Section */}
             <PreferenceSettings />
 
@@ -261,7 +261,7 @@ export function SettingsModals({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6 pt-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 pt-4">
             <TranscriptSettings
               transcriptModelConfig={transcriptModelConfig}
               setTranscriptModelConfig={setTranscriptModelConfig}

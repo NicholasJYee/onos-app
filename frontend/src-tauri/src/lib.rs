@@ -138,6 +138,7 @@ async fn start_recording<R: Runtime>(
         mic_device_name,
         system_device_name,
         meeting_name.clone(),
+        None, // this entry point never continues an existing meeting
     )
     .await
     {

@@ -67,13 +67,14 @@ pub struct TranscriptionStatus {
 
 /// Start recording with default devices
 pub async fn start_recording<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
-    start_recording_with_meeting_name(app, None).await
+    start_recording_with_meeting_name(app, None, None).await
 }
 
 /// Start recording with default devices and optional meeting name
 pub async fn start_recording_with_meeting_name<R: Runtime>(
     app: AppHandle<R>,
     meeting_name: Option<String>,
+    existing_folder: Option<String>,
 ) -> Result<(), String> {
     info!(
         "Starting recording with default devices, meeting: {:?}",
@@ -223,6 +224,8 @@ pub async fn start_recording_with_meeting_name<R: Runtime>(
         )
     });
     manager.set_meeting_name(Some(effective_meeting_name));
+    // Continuing an existing meeting: write into its folder rather than a new one.
+    manager.set_resume_folder(existing_folder.as_deref().map(std::path::PathBuf::from));
 
     // Set up error callback
     let app_for_error = app.clone();
@@ -309,7 +312,8 @@ pub async fn start_recording_with_devices<R: Runtime>(
     mic_device_name: Option<String>,
     system_device_name: Option<String>,
 ) -> Result<(), String> {
-    start_recording_with_devices_and_meeting(app, mic_device_name, system_device_name, None).await
+    start_recording_with_devices_and_meeting(app, mic_device_name, system_device_name, None, None)
+        .await
 }
 
 /// Start recording with specific devices and optional meeting name
@@ -318,6 +322,7 @@ pub async fn start_recording_with_devices_and_meeting<R: Runtime>(
     mic_device_name: Option<String>,
     system_device_name: Option<String>,
     meeting_name: Option<String>,
+    existing_folder: Option<String>,
 ) -> Result<(), String> {
     info!(
         "Starting recording with specific devices: mic={:?}, system={:?}, meeting={:?}",
@@ -392,6 +397,8 @@ pub async fn start_recording_with_devices_and_meeting<R: Runtime>(
         )
     });
     manager.set_meeting_name(Some(effective_meeting_name));
+    // Continuing an existing meeting: write into its folder rather than a new one.
+    manager.set_resume_folder(existing_folder.as_deref().map(std::path::PathBuf::from));
 
     // Set up error callback
     let app_for_error = app.clone();

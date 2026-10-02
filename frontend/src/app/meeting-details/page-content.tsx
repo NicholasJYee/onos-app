@@ -6,6 +6,7 @@ import { useSidebar } from '@/components/Sidebar/SidebarProvider';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { TranscriptPanel } from '@/components/MeetingDetails/TranscriptPanel';
+import { useContinueRecording } from '@/hooks/meeting-details/useContinueRecording';
 import { SummaryPanel } from '@/components/MeetingDetails/SummaryPanel';
 import { ModelConfig } from '@/components/ModelSettingsModal';
 
@@ -30,6 +31,8 @@ export default function PageContent({
   totalCount,
   loadedCount,
   onLoadMore,
+  folderPath,
+  onTranscriptsRefresh,
 }: {
   meeting: any;
   summaryData: Summary | null;
@@ -43,6 +46,10 @@ export default function PageContent({
   totalCount?: number;
   loadedCount?: number;
   onLoadMore?: () => void;
+  /** The meeting's folder, so a resumed recording is stored alongside the original. */
+  folderPath?: string | null;
+  /** Re-read the transcript after a resumed recording was appended. */
+  onTranscriptsRefresh?: () => void;
 }) {
   console.log('📄 PAGE CONTENT: Initializing with data:', {
     meetingId: meeting.id,
@@ -56,6 +63,14 @@ export default function PageContent({
   // Phone-width only: which panel the view switcher below is showing. The two
   // panels sit side by side from `md` up, where this is ignored.
   const [mobileView, setMobileView] = useState<'summary' | 'transcript'>('summary');
+
+  // Resume recording into this meeting, in place.
+  const continueRecording = useContinueRecording({
+    meetingId: meeting.id,
+    meetingTitle: meeting.title ?? '',
+    folderPath,
+    onAppended: () => onTranscriptsRefresh?.(),
+  });
   const [summaryResponse] = useState<SummaryResponse | null>(null);
 
   // Ref to store the modal open function from SummaryGeneratorButtonGroup
@@ -188,6 +203,10 @@ export default function PageContent({
       <div className="flex flex-1 overflow-hidden">
         <TranscriptPanel
           mobileVisible={mobileView === 'transcript'}
+          onContinueRecording={continueRecording.startContinue}
+          onStopContinue={continueRecording.stopContinue}
+          isContinuing={continueRecording.isRecording}
+          isFinishingContinue={continueRecording.isFinishing}
           transcripts={meetingData.transcripts}
           customPrompt={customPrompt}
           onPromptChange={setCustomPrompt}
@@ -197,7 +216,7 @@ export default function PageContent({
           disableAutoScroll={true}
           // Pagination props for efficient loading
           usePagination={true}
-          segments={segments}
+          segments={[...(segments ?? []), ...continueRecording.liveSegments]}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
           totalCount={totalCount}

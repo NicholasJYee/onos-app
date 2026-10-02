@@ -42,6 +42,7 @@ function MeetingDetailsContent() {
     totalCount,
     loadedCount,
     loadMore,
+    refresh: refreshTranscripts,
     error: transcriptError,
   } = usePaginatedTranscripts({ meetingId: meetingId || '' });
 
@@ -366,6 +367,8 @@ function MeetingDetailsContent() {
     }}
     // Pagination props for efficient transcript loading
     segments={segments}
+    folderPath={metadata?.folder_path ?? null}
+    onTranscriptsRefresh={refreshTranscripts}
     hasMore={hasMore}
     isLoadingMore={isLoadingMore}
     totalCount={totalCount}

@@ -468,6 +468,12 @@ impl RecordingManager {
         self.recording_saver.set_meeting_name(name);
     }
 
+    /// Reuse an existing meeting folder instead of creating a new one, so a
+    /// resumed recording is stored alongside the session it continues.
+    pub fn set_resume_folder(&mut self, folder: Option<std::path::PathBuf>) {
+        self.recording_saver.set_resume_folder(folder);
+    }
+
     /// Add a structured transcript segment to be saved later
     pub fn add_transcript_segment(&self, segment: super::recording_saver::TranscriptSegment) {
         self.recording_saver.add_transcript_segment(segment);

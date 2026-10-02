@@ -24,6 +24,8 @@ interface UsePaginatedTranscriptsReturn {
     // Actions
     loadMore: () => Promise<void>;
     reset: () => void;
+    /** Re-read this meeting's transcripts from the database. */
+    refresh: () => void;
 }
 
 /**
@@ -57,6 +59,9 @@ export function usePaginatedTranscripts({
     const lastLoadTimeRef = useRef(0); // Debounce protection
 
     // Reset state when meeting changes
+    const [refreshKey, setRefreshKey] = useState(0);
+    const loadedRefreshKeyRef = useRef(0);
+
     const reset = useCallback(() => {
         setMetadata(null);
         setTranscripts([]);
@@ -151,6 +156,15 @@ export function usePaginatedTranscripts({
         }
     }, [hasMore, meetingId, loadTranscriptsAtOffset, isLoading]);
 
+    /**
+     * Re-read this meeting's transcripts from the database. The initial-load
+     * effect short-circuits when the meeting id has not changed, so appending
+     * to the meeting currently on screen needs an explicit nudge.
+     */
+    const refresh = useCallback(() => {
+        setRefreshKey((key) => key + 1);
+    }, []);
+
     // Initial load
     useEffect(() => {
         if (!meetingId) {
@@ -158,9 +172,11 @@ export function usePaginatedTranscripts({
             return;
         }
 
-        // Avoid reloading the same meeting
-        if (loadedMeetingIdRef.current === meetingId) return;
+        // Avoid reloading the same meeting, unless a refresh was requested
+        // (e.g. after a resumed recording appended new transcripts).
+        if (loadedMeetingIdRef.current === meetingId && refreshKey === loadedRefreshKeyRef.current) return;
         loadedMeetingIdRef.current = meetingId;
+        loadedRefreshKeyRef.current = refreshKey;
 
         reset();
 
@@ -175,7 +191,7 @@ export function usePaginatedTranscripts({
         };
 
         loadInitial();
-    }, [meetingId, reset, loadMetadata, loadTranscriptsAtOffset]);
+    }, [meetingId, refreshKey, reset, loadMetadata, loadTranscriptsAtOffset]);
 
     // Convert to segments (memoized)
     const segments = useMemo(() =>
@@ -195,5 +211,6 @@ export function usePaginatedTranscripts({
         error,
         loadMore,
         reset,
+        refresh,
     };
 }

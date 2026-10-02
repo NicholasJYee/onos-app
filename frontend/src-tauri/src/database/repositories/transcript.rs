@@ -82,6 +82,86 @@ impl TranscriptsRepository {
         Ok(meeting_id)
     }
 
+    /// Appends transcript segments to an existing meeting, continuing its clock.
+    ///
+    /// Transcripts are read back with `ORDER BY audio_start_time ASC` (see
+    /// `MeetingsRepository::get_meeting_transcripts_paginated`), so a resumed
+    /// recording -- whose own clock starts at zero again -- would interleave
+    /// with, and mostly sort above, what is already stored. Every incoming
+    /// segment is therefore shifted past the last one already on the meeting.
+    /// That keeps resumed text at the bottom and makes the timestamps read as
+    /// one continuous session rather than restarting at 00:00.
+    ///
+    /// Returns the offset applied, in seconds.
+    pub async fn append_transcripts(
+        pool: &SqlitePool,
+        meeting_id: &str,
+        transcripts: &[TranscriptSegment],
+    ) -> Result<f64, SqlxError> {
+        let mut conn = pool.acquire().await?;
+        let mut transaction = conn.begin().await?;
+
+        // Where the existing recording left off. The inner COALESCE covers rows
+        // written before the audio timing columns existed, where both are NULL;
+        // the outer one covers a meeting with no transcripts at all.
+        let offset: f64 = sqlx::query_scalar(
+            "SELECT COALESCE(MAX(COALESCE(audio_end_time, audio_start_time, 0)), 0)
+             FROM transcripts WHERE meeting_id = ?",
+        )
+        .bind(meeting_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+
+        for segment in transcripts {
+            let transcript_id = format!("transcript-{}", Uuid::new_v4());
+            let result = sqlx::query(
+                "INSERT INTO transcripts (id, meeting_id, transcript, timestamp, audio_start_time, audio_end_time, duration)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"
+            )
+            .bind(&transcript_id)
+            .bind(meeting_id)
+            .bind(&segment.text)
+            .bind(&segment.timestamp)
+            .bind(segment.audio_start_time.map(|t| t + offset))
+            .bind(segment.audio_end_time.map(|t| t + offset))
+            .bind(segment.duration)
+            .execute(&mut *transaction)
+            .await;
+
+            if let Err(e) = result {
+                error!(
+                    "Failed to append transcript segment to meeting {}: {}",
+                    meeting_id, e
+                );
+                transaction.rollback().await?;
+                return Err(e);
+            }
+        }
+
+        // Keep updated_at honest so the meeting sorts as recently touched.
+        if let Err(e) = sqlx::query("UPDATE meetings SET updated_at = ? WHERE id = ?")
+            .bind(Utc::now())
+            .bind(meeting_id)
+            .execute(&mut *transaction)
+            .await
+        {
+            error!("Failed to touch meeting {} after append: {}", meeting_id, e);
+            transaction.rollback().await?;
+            return Err(e);
+        }
+
+        transaction.commit().await?;
+
+        info!(
+            "Appended {} transcript segments to meeting {} at +{:.2}s",
+            transcripts.len(),
+            meeting_id,
+            offset
+        );
+
+        Ok(offset)
+    }
+
     /// Searches for a query string within the transcripts.
     /// It returns a list of matching transcripts with context.
     pub async fn search_transcripts(

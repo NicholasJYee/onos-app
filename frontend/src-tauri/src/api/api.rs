@@ -928,6 +928,69 @@ pub async fn api_save_meeting_title<R: Runtime>(
 }
 
 #[tauri::command]
+pub async fn api_append_transcript<R: Runtime>(
+    _app: AppHandle<R>,
+    state: tauri::State<'_, AppState>,
+    meeting_id: String,
+    transcripts: Vec<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    log_info!(
+        "api_append_transcript called for meeting: {}, transcripts: {}",
+        meeting_id,
+        transcripts.len()
+    );
+
+    let transcripts_to_save: Vec<TranscriptSegment> = transcripts
+        .into_iter()
+        .map(serde_json::from_value)
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| {
+            log_error!("Failed to parse transcript segments: {}", e);
+            format!("Invalid transcript data format: {}. Please check the data structure.", e)
+        })?;
+
+    if transcripts_to_save.is_empty() {
+        log_info!("Nothing to append for meeting {}", meeting_id);
+        return Ok(serde_json::json!({
+            "status": "success",
+            "message": "No transcripts to append",
+            "meeting_id": meeting_id,
+            "appended": 0,
+            "offset_seconds": 0.0
+        }));
+    }
+
+    let pool = state.db_manager.pool();
+    let appended = transcripts_to_save.len();
+
+    match TranscriptsRepository::append_transcripts(pool, &meeting_id, &transcripts_to_save).await {
+        Ok(offset_seconds) => {
+            log_info!(
+                "Appended {} transcript segments to meeting {} at +{:.2}s",
+                appended,
+                meeting_id,
+                offset_seconds
+            );
+            Ok(serde_json::json!({
+                "status": "success",
+                "message": "Transcript appended successfully",
+                "meeting_id": meeting_id,
+                "appended": appended,
+                "offset_seconds": offset_seconds
+            }))
+        }
+        Err(e) => {
+            log_error!(
+                "Error appending transcript to meeting '{}': {}",
+                meeting_id,
+                e
+            );
+            Err(format!("Failed to append transcript: {}", e))
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn api_save_transcript<R: Runtime>(
     _app: AppHandle<R>,
     state: tauri::State<'_, AppState>,

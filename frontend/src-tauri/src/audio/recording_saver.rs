@@ -50,6 +50,10 @@ pub struct DeviceInfo {
 pub struct RecordingSaver {
     incremental_saver: Option<Arc<AsyncMutex<IncrementalAudioSaver>>>,
     meeting_folder: Option<PathBuf>,
+    /// Set when resuming an existing meeting: its folder is reused instead of
+    /// creating a new timestamped one, so the continued recording and the
+    /// original live together.
+    resume_folder: Option<PathBuf>,
     meeting_name: Option<String>,
     metadata: Option<MeetingMetadata>,
     transcript_segments: Arc<Mutex<Vec<TranscriptSegment>>>,
@@ -62,6 +66,7 @@ impl RecordingSaver {
         Self {
             incremental_saver: None,
             meeting_folder: None,
+            resume_folder: None,
             meeting_name: None,
             metadata: None,
             transcript_segments: Arc::new(Mutex::new(Vec::new())),
@@ -70,9 +75,24 @@ impl RecordingSaver {
         }
     }
 
+    /// `created_at` from an existing metadata.json, if it can be read.
+    fn read_metadata_created_at(folder: &PathBuf) -> Option<String> {
+        let raw = std::fs::read_to_string(folder.join("metadata.json")).ok()?;
+        let parsed: MeetingMetadata = serde_json::from_str(&raw).ok()?;
+        Some(parsed.created_at)
+    }
+
     /// Set the meeting name for this recording session
     pub fn set_meeting_name(&mut self, name: Option<String>) {
         self.meeting_name = name;
+    }
+
+    /// Reuse an existing meeting folder instead of creating a new one.
+    ///
+    /// Used by "continue recording": the resumed session writes its audio
+    /// alongside the original rather than into a fresh timestamped folder.
+    pub fn set_resume_folder(&mut self, folder: Option<PathBuf>) {
+        self.resume_folder = folder;
     }
 
     /// Set device information in metadata
@@ -231,8 +251,28 @@ impl RecordingSaver {
         // Load preferences to get base recordings folder
         let base_folder = super::recording_preferences::get_default_recordings_folder();
 
-        // Create meeting folder structure (with or without .checkpoints/ subdirectory)
-        let meeting_folder = create_meeting_folder(&base_folder, meeting_name, create_checkpoints)?;
+        // Resuming an existing meeting reuses its folder; otherwise a new
+        // timestamped one is created as usual.
+        let meeting_folder = match self.resume_folder.clone() {
+            Some(folder) if folder.is_dir() => {
+                if create_checkpoints {
+                    // finalize() removes .checkpoints after each session, so it
+                    // has to be recreated for this one.
+                    std::fs::create_dir_all(folder.join(".checkpoints"))?;
+                }
+                info!("Resuming into existing meeting folder: {}", folder.display());
+                folder
+            }
+            Some(folder) => {
+                warn!(
+                    "Resume folder {} does not exist; creating a new meeting folder",
+                    folder.display()
+                );
+                create_meeting_folder(&base_folder, meeting_name, create_checkpoints)?
+            }
+            None => create_meeting_folder(&base_folder, meeting_name, create_checkpoints)?,
+        };
+        let is_resuming = self.resume_folder.is_some();
 
         // Only initialize incremental saver if checkpoints are needed (auto_save is true)
         if create_checkpoints {
@@ -243,12 +283,21 @@ impl RecordingSaver {
             info!("⚠️  Skipped incremental audio saver (auto-save disabled)");
         }
 
+        // Keep the meeting's original start time when resuming, so the folder
+        // does not claim to have been created at the resume.
+        let created_at = if is_resuming {
+            Self::read_metadata_created_at(&meeting_folder)
+                .unwrap_or_else(|| chrono::Utc::now().to_rfc3339())
+        } else {
+            chrono::Utc::now().to_rfc3339()
+        };
+
         // Create initial metadata
         let metadata = MeetingMetadata {
             version: "1.0".to_string(),
             meeting_id: None,  // Will be set by backend
             meeting_name: Some(meeting_name.to_string()),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at,
             completed_at: None,
             duration_seconds: None,
             devices: DeviceInfo {

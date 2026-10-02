@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { useRecordingStop } from '@/hooks/useRecordingStop';
+import { isContinueSessionActive } from '@/lib/continueRecordingSession';
 
 /**
  * RecordingPostProcessingProvider
@@ -35,6 +36,14 @@ export function RecordingPostProcessingProvider({ children }: { children: React.
         // Listen for recording-stop-complete event from Rust
         unlistenFn = await listen<boolean>('recording-stop-complete', (event) => {
           console.log('[RecordingPostProcessing] Received recording-stop-complete event:', event.payload);
+
+          // A resumed recording is saved by the meeting page, which appends to
+          // the meeting it continues. Running the normal flow here as well
+          // would create a duplicate meeting from the same audio.
+          if (isContinueSessionActive()) {
+            console.log('[RecordingPostProcessing] Continue-recording session active, leaving the save to the meeting page');
+            return;
+          }
 
           // Call the post-processing handler
           // event.payload is the callApi boolean (true for normal stops)

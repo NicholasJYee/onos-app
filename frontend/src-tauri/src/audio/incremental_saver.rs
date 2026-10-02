@@ -128,8 +128,13 @@ impl IncrementalAudioSaver {
             return Err(anyhow!("No audio checkpoints to merge - recording may have failed"));
         }
 
-        // Merge all checkpoints using FFmpeg concat
-        let final_audio_path = self.meeting_folder.join("audio.mp4");
+        // Merge all checkpoints using FFmpeg concat.
+        //
+        // A resumed recording reuses its meeting's folder, so "audio.mp4" may
+        // already hold the previous session. Fall back to audio_2.mp4,
+        // audio_3.mp4 and so on rather than overwriting it. A first session
+        // still produces plain audio.mp4, unchanged.
+        let final_audio_path = self.next_audio_path();
         self.merge_checkpoints(&final_audio_path).await?;
 
         // Clean up checkpoints directory
@@ -142,6 +147,22 @@ impl IncrementalAudioSaver {
         info!("Finalized recording: {}", final_audio_path.display());
 
         Ok(final_audio_path)
+    }
+
+    /// First unused `audio*.mp4` path in the meeting folder.
+    fn next_audio_path(&self) -> PathBuf {
+        let first = self.meeting_folder.join("audio.mp4");
+        if !first.exists() {
+            return first;
+        }
+        // Bounded so a folder in a strange state cannot spin here.
+        for n in 2..1000 {
+            let candidate = self.meeting_folder.join(format!("audio_{}.mp4", n));
+            if !candidate.exists() {
+                return candidate;
+            }
+        }
+        first
     }
 
     /// Merge all checkpoint files into final audio.mp4 using FFmpeg concat

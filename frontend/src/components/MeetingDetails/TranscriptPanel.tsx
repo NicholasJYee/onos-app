@@ -4,6 +4,7 @@ import { Transcript, TranscriptSegmentData } from '@/types';
 import { TranscriptView } from '@/components/TranscriptView';
 import { VirtualizedTranscriptView } from '@/components/VirtualizedTranscriptView';
 import { TranscriptButtonGroup } from './TranscriptButtonGroup';
+import { Mic, Square, Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface TranscriptPanelProps {
@@ -28,6 +29,11 @@ interface TranscriptPanelProps {
    * shows both panels side by side, so this has no effect at `md` and above.
    */
   mobileVisible?: boolean;
+  /** Resume recording into this meeting. Hidden when not provided. */
+  onContinueRecording?: () => void;
+  onStopContinue?: () => void;
+  isContinuing?: boolean;
+  isFinishingContinue?: boolean;
 }
 
 export function TranscriptPanel({
@@ -39,6 +45,10 @@ export function TranscriptPanel({
   isRecording,
   disableAutoScroll = false,
   mobileVisible = false,
+  onContinueRecording,
+  onStopContinue,
+  isContinuing = false,
+  isFinishingContinue = false,
   usePagination = false,
   segments,
   hasMore,
@@ -71,6 +81,42 @@ export function TranscriptPanel({
           onCopyTranscript={onCopyTranscript}
           onOpenMeetingFolder={onOpenMeetingFolder}
         />
+
+        {/* Resume this meeting: new audio goes to the same folder and the new
+            transcript is appended below what is already here. */}
+        {onContinueRecording && (
+          <div className="mt-3">
+            {isFinishingContinue ? (
+              <button
+                type="button"
+                disabled
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-500 cursor-not-allowed"
+              >
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving transcript...
+              </button>
+            ) : isContinuing ? (
+              <button
+                type="button"
+                onClick={onStopContinue}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                <Square className="w-4 h-4" fill="currentColor" />
+                Stop Recording
+                <span className="ml-1 w-2 h-2 rounded-full bg-white animate-pulse" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onContinueRecording}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Mic className="w-4 h-4" />
+                Continue Recording
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Transcript content - use virtualized view for better performance */}

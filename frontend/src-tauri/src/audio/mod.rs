@@ -1,6 +1,10 @@
 // src/audio/mod.rs
 pub mod audio_processing;
 pub mod encode;
+// iOS cannot run the ffmpeg sidecar `encode` relies on, so it writes audio
+// through AVFoundation instead.
+#[cfg(target_os = "ios")]
+pub mod ios_encoder;
 pub mod ffmpeg;
 #[cfg(not(target_os = "ios"))]
 pub mod vad;

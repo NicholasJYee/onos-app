@@ -304,7 +304,14 @@ impl RecordingSaver {
                 microphone: None,  // Could be enhanced to store actual device names
                 system_audio: None,
             },
-            audio_file: if create_checkpoints { "audio.mp4".to_string() } else { "".to_string() },
+            // iOS writes AAC in an .m4a through AVFoundation; everywhere else
+            // ffmpeg produces .mp4. A resumed session may land on audio_2.*,
+            // which this sidecar field does not try to track.
+            audio_file: if create_checkpoints {
+                if cfg!(target_os = "ios") { "audio.m4a".to_string() } else { "audio.mp4".to_string() }
+            } else {
+                "".to_string()
+            },
             transcript_file: "transcripts.json".to_string(),
             sample_rate: 48000,
             status: "recording".to_string(),

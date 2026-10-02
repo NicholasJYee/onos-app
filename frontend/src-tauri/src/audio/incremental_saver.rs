@@ -23,6 +23,31 @@ pub struct IncrementalAudioSaver {
     checkpoints_dir: PathBuf,
     meeting_folder: PathBuf,
     sample_rate: u32,
+    /// iOS encodes straight to AAC as samples arrive; there are no checkpoint
+    /// files to merge because there is no ffmpeg to merge them with.
+    #[cfg(target_os = "ios")]
+    ios_writer: Option<super::ios_encoder::IosAudioWriter>,
+    #[cfg(target_os = "ios")]
+    ios_output_path: PathBuf,
+}
+
+/// First unused `audio*.<ext>` path in a meeting folder.
+///
+/// A resumed recording reuses its meeting's folder, so the original must not be
+/// overwritten: this yields audio.m4a, then audio_2.m4a, audio_3.m4a and so on.
+fn next_audio_path(folder: &std::path::Path, extension: &str) -> PathBuf {
+    let first = folder.join(format!("audio.{}", extension));
+    if !first.exists() {
+        return first;
+    }
+    // Bounded so a folder in a strange state cannot spin here.
+    for n in 2..1000 {
+        let candidate = folder.join(format!("audio_{}.{}", n, extension));
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    first
 }
 
 impl IncrementalAudioSaver {
@@ -34,10 +59,19 @@ impl IncrementalAudioSaver {
     pub fn new(meeting_folder: PathBuf, sample_rate: u32) -> Result<Self> {
         let checkpoints_dir = meeting_folder.join(".checkpoints");
 
-        // Verify checkpoints directory exists
+        // Verify checkpoints directory exists. Not required on iOS, which does
+        // not checkpoint: AVAudioFile encodes continuously into one container.
+        #[cfg(not(target_os = "ios"))]
         if !checkpoints_dir.exists() {
             return Err(anyhow!("Checkpoints directory does not exist: {}", checkpoints_dir.display()));
         }
+
+        #[cfg(target_os = "ios")]
+        let (ios_output_path, ios_writer) = {
+            let path = next_audio_path(&meeting_folder, "m4a");
+            let writer = super::ios_encoder::IosAudioWriter::create(&path, sample_rate, 1)?;
+            (path, Some(writer))
+        };
 
         Ok(Self {
             checkpoint_buffer: Vec::new(),
@@ -46,12 +80,27 @@ impl IncrementalAudioSaver {
             checkpoints_dir,
             meeting_folder,
             sample_rate,
+            #[cfg(target_os = "ios")]
+            ios_writer,
+            #[cfg(target_os = "ios")]
+            ios_output_path,
         })
     }
 
     /// Add an audio chunk to the buffer
     /// Automatically saves a checkpoint when buffer reaches 30 seconds
     pub fn add_chunk(&mut self, chunk: AudioChunk) -> Result<()> {
+        // iOS encodes as it goes, so there is nothing to accumulate.
+        #[cfg(target_os = "ios")]
+        {
+            if let Some(writer) = self.ios_writer.as_mut() {
+                writer.write(&chunk.data)?;
+            }
+            return Ok(());
+        }
+
+        #[cfg(not(target_os = "ios"))]
+        {
         let audio_data = AudioData {
             data: chunk.data,
             // sample_rate: chunk.sample_rate,
@@ -72,6 +121,7 @@ impl IncrementalAudioSaver {
         }
 
         Ok(())
+        }
     }
 
     /// Save current buffer as a checkpoint file
@@ -117,6 +167,18 @@ impl IncrementalAudioSaver {
     pub async fn finalize(&mut self) -> Result<PathBuf> {
         info!("Finalizing incremental recording...");
 
+        // Dropping the writer is what closes the .m4a: until AVAudioFile is
+        // deallocated the container has no moov atom and will not play.
+        #[cfg(target_os = "ios")]
+        {
+            self.ios_writer = None;
+            info!("Finalized recording: {}", self.ios_output_path.display());
+            return Ok(self.ios_output_path.clone());
+        }
+
+        #[cfg(not(target_os = "ios"))]
+        {
+
         // Save final buffer if not empty
         if !self.checkpoint_buffer.is_empty() {
             info!("Saving final checkpoint with remaining {} chunks", self.checkpoint_buffer.len());
@@ -134,7 +196,7 @@ impl IncrementalAudioSaver {
         // already hold the previous session. Fall back to audio_2.mp4,
         // audio_3.mp4 and so on rather than overwriting it. A first session
         // still produces plain audio.mp4, unchanged.
-        let final_audio_path = self.next_audio_path();
+        let final_audio_path = next_audio_path(&self.meeting_folder, "mp4");
         self.merge_checkpoints(&final_audio_path).await?;
 
         // Clean up checkpoints directory
@@ -147,22 +209,7 @@ impl IncrementalAudioSaver {
         info!("Finalized recording: {}", final_audio_path.display());
 
         Ok(final_audio_path)
-    }
-
-    /// First unused `audio*.mp4` path in the meeting folder.
-    fn next_audio_path(&self) -> PathBuf {
-        let first = self.meeting_folder.join("audio.mp4");
-        if !first.exists() {
-            return first;
         }
-        // Bounded so a folder in a strange state cannot spin here.
-        for n in 2..1000 {
-            let candidate = self.meeting_folder.join(format!("audio_{}.mp4", n));
-            if !candidate.exists() {
-                return candidate;
-            }
-        }
-        first
     }
 
     /// Merge all checkpoint files into final audio.mp4 using FFmpeg concat

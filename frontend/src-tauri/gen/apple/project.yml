@@ -67,6 +67,13 @@ targets:
         NSLocalNetworkUsageDescription: "Development builds load the user interface from a local development server on your network. Release builds do not use the local network."
         # Keeps capture alive when the app is backgrounded mid-meeting.
         UIBackgroundModes: [audio]
+        # Expose <container>/Documents, where onos-recordings lives, so meeting
+        # folders can be opened from the Files app and over Finder file sharing.
+        # Both keys are needed: UIFileSharingEnabled alone only covers Finder,
+        # LSSupportsOpeningDocumentsInPlace is what puts the app under
+        # "On My iPhone" and lets files be played and shared in place.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
     entitlements:
       path: onos_iOS/onos_iOS.entitlements
     scheme:

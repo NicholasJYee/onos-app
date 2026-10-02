@@ -11,6 +11,12 @@
       cert here belongs to 4A68G9PFQZ, and using that value fails with
       "No Account for Team" because the provisioning profile and app ID
       prefix are owned by CML5RHJMX4.
+
+      The method here is for direct installs onto a registered device, which
+      need a development profile. TestFlight builds override it by passing
+      the CLI's export-method flag as app-store-connect; the CLI merges that
+      over this file into a temporary copy, so this stays the default for
+      `pnpm build:ios`. See scripts/ios-testflight.sh.
     -->
     <key>method</key>
     <string>debugging</string>

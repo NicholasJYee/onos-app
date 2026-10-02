@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Copy, FolderOpen } from 'lucide-react';
-import Analytics from '@/lib/analytics';
 
 
 interface TranscriptButtonGroupProps {
@@ -25,7 +24,6 @@ export function TranscriptButtonGroup({
           variant="outline"
           size="sm"
           onClick={() => {
-            Analytics.trackButtonClick('copy_transcript', 'meeting_details');
             onCopyTranscript();
           }}
           disabled={transcriptCount === 0}
@@ -40,7 +38,6 @@ export function TranscriptButtonGroup({
           variant="outline"
           className="xl:px-4"
           onClick={() => {
-            Analytics.trackButtonClick('open_recording_folder', 'meeting_details');
             onOpenMeetingFolder();
           }}
           title="Open Recording Folder"

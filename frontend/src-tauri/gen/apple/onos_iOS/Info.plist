@@ -40,6 +40,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Development builds load the user interface from a local development server on your network. Release builds do not use the local network.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This application needs access to your microphone to record meeting audio.</string>
 	<key>UIBackgroundModes</key>

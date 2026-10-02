@@ -153,6 +153,39 @@ pub async fn generate_with_builtin(
     // Apply model-specific chat template
     let formatted_prompt =
         models::format_prompt(&model_def.template, system_prompt, user_prompt)?;
+    // On iOS there is no sidecar to talk to. The platform forbids subprocesses,
+    // so no llama-helper binary can be spawned and none is bundled; resolving one
+    // fails with "llama-helper binary not found". The same llama.cpp build is
+    // linked into the app instead (the iOS-only `llama-helper` dependency), so
+    // generation runs in-process with exactly the model, prompt and sampling
+    // parameters the sidecar would have been handed.
+    #[cfg(target_os = "ios")]
+    {
+        generate_in_process(formatted_prompt, model_path, &model_def, cancellation_token).await
+    }
+
+    #[cfg(not(target_os = "ios"))]
+    {
+        generate_via_sidecar(
+            app_data_dir,
+            formatted_prompt,
+            model_path,
+            &model_def,
+            cancellation_token,
+        )
+        .await
+    }
+}
+
+/// Generate using the llama-helper sidecar process (desktop).
+#[cfg(not(target_os = "ios"))]
+async fn generate_via_sidecar(
+    app_data_dir: &PathBuf,
+    formatted_prompt: String,
+    model_path: PathBuf,
+    model_def: &models::ModelDef,
+    cancellation_token: Option<&CancellationToken>,
+) -> Result<String> {
     // Get or initialize sidecar manager
     let manager = {
         let mut global_manager = SIDECAR_MANAGER.lock().await;
@@ -234,6 +267,66 @@ pub async fn generate_with_builtin(
         }
         Response::Error { message } => Err(anyhow!("Sidecar error: {}", message)),
     }
+}
+
+/// Generate in-process with the linked llama.cpp build (iOS).
+///
+/// Mirrors the sidecar path's request: same formatted prompt, same model file,
+/// same sampling parameters.
+///
+/// `generate_once` is synchronous and compute-bound, so it runs on a blocking
+/// thread. Note that cancellation can only abandon the result, not stop the
+/// work: the sidecar path cancels by killing the process, which is not an
+/// option in-process, so the generation runs to completion in the background
+/// and holds llama-helper's global model state until it does.
+#[cfg(target_os = "ios")]
+async fn generate_in_process(
+    formatted_prompt: String,
+    model_path: PathBuf,
+    model_def: &models::ModelDef,
+    cancellation_token: Option<&CancellationToken>,
+) -> Result<String> {
+    let model_path_str = model_path.to_string_lossy().to_string();
+    let context_size = model_def.context_size;
+    let temperature = model_def.sampling.temperature;
+    let top_k = model_def.sampling.top_k;
+    let top_p = model_def.sampling.top_p;
+    let stop_tokens = model_def.sampling.stop_tokens.clone();
+
+    log::info!("Generating in-process (no sidecar on iOS)");
+
+    let handle = tokio::task::spawn_blocking(move || {
+        llama_helper::generate_once(
+            &formatted_prompt,
+            &model_path_str,
+            context_size,
+            models::DEFAULT_MAX_TOKENS,
+            temperature,
+            top_k,
+            top_p,
+            stop_tokens,
+        )
+    });
+
+    let text = match cancellation_token {
+        Some(token) => {
+            tokio::select! {
+                joined = handle => {
+                    joined.map_err(|e| anyhow!("Generation task failed: {}", e))??
+                }
+                _ = token.cancelled() => {
+                    log::warn!("Generation cancelled by user; in-process work continues until it finishes");
+                    return Err(anyhow!("Generation cancelled by user"));
+                }
+            }
+        }
+        None => handle
+            .await
+            .map_err(|e| anyhow!("Generation task failed: {}", e))??,
+    };
+
+    log::info!("Generation completed: {} chars", text.len());
+    Ok(text)
 }
 
 /// Shutdown the global sidecar (graceful cleanup)

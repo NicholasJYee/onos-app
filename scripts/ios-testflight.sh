@@ -202,10 +202,21 @@ echo "==> Building for App Store Connect"
 cd "$frontend"
 node node_modules/@tauri-apps/cli/tauri.js ios build --target aarch64 --export-method app-store-connect
 
-ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS.ipa"
+# `pnpm build:ios` writes its device-installable .ipa to this same path, and
+# whichever ran last wins. They are not interchangeable: an App Store build
+# refuses to sideload ("Attempted to install a Beta profile without the proper
+# entitlement", 0xe800801f) and a device build is rejected by App Store Connect.
+# Keep this one under its own name so both survive and neither is ambiguous.
+built_ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS.ipa"
+ipa="$frontend/src-tauri/gen/apple/build/arm64/ONOS-testflight-${build_number}.ipa"
+if [ -f "$built_ipa" ]; then
+    mv "$built_ipa" "$ipa"
+fi
+
 echo
 if [ -f "$ipa" ]; then
     echo "Built $ipa"
+    echo "(for installing directly on a device, use \`pnpm build:ios\` instead)"
     echo
     echo "Upload it with either:"
     echo "  - Transporter.app (free on the Mac App Store): drag the .ipa in, Deliver"

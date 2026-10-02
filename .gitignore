@@ -79,3 +79,6 @@ target/
 frontend/src-tauri/binaries/
 
 *hf*
+
+# App Store Connect API credentials for iOS signing (see the .example)
+scripts/ios-signing.env

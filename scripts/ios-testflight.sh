@@ -32,6 +32,11 @@
 #   APPLE_API_ISSUER    the Issuer ID (a UUID, shown above the key list)
 #   APPLE_API_KEY_PATH  path to the downloaded AuthKey_<KEYID>.p8
 #
+# Rather than exporting those by hand each time, put them in
+# scripts/ios-signing.env (gitignored; see the .example alongside it). This
+# script sources that file, and will find the key automatically if it lives in
+# ~/.appstoreconnect/private_keys/.
+#
 # Create one at App Store Connect > Users and Access > Integrations > App Store
 # Connect API, with the "App Manager" role. The .p8 downloads once and cannot be
 # downloaded again, so keep it somewhere safe and out of this repo. The same key
@@ -49,6 +54,28 @@ project_yml="$frontend/src-tauri/gen/apple/project.yml"
 if [ ! -f "$info_plist" ]; then
     echo "error: $info_plist not found" >&2
     exit 1
+fi
+
+# Local, untracked credentials, so they do not have to be exported by hand every
+# time. See scripts/ios-signing.env.example.
+signing_env="$repo_root/scripts/ios-signing.env"
+if [ -f "$signing_env" ]; then
+    # shellcheck disable=SC1090
+    . "$signing_env"
+    echo "==> Loaded signing config from scripts/ios-signing.env"
+fi
+
+# With a key id but no explicit path, look where Apple's own tools keep keys.
+if [ -n "${APPLE_API_KEY:-}" ] && [ -z "${APPLE_API_KEY_PATH:-}" ]; then
+    for candidate in \
+        "$HOME/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY}.p8" \
+        "$HOME/private_keys/AuthKey_${APPLE_API_KEY}.p8"; do
+        if [ -f "$candidate" ]; then
+            export APPLE_API_KEY_PATH="$candidate"
+            echo "==> Found signing key at $candidate"
+            break
+        fi
+    done
 fi
 
 # Report which signing route this run will take, since the failure mode when

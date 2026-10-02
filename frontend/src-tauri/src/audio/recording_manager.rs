@@ -68,6 +68,13 @@ impl RecordingManager {
     ) -> Result<mpsc::UnboundedReceiver<AudioChunk>> {
         info!("Starting recording manager (auto_save: {})", auto_save);
 
+        // iOS starts every process in the `soloAmbient` audio category, which
+        // yields silent input regardless of the microphone permission. The
+        // session must be switched to a record-capable category and activated
+        // before any input stream is opened.
+        #[cfg(target_os = "ios")]
+        super::devices::platform::activate_audio_session()?;
+
         // Set up transcription channel
         let (transcription_sender, transcription_receiver) = mpsc::unbounded_channel::<AudioChunk>();
 
@@ -330,6 +337,10 @@ impl RecordingManager {
         if let Err(e) = self.pipeline_manager.stop().await {
             error!("Error stopping audio pipeline: {}", e);
         }
+
+        // Hand the audio session back so other apps regain control.
+        #[cfg(target_os = "ios")]
+        super::devices::platform::deactivate_audio_session();
 
         // Save the recording with actual duration
         match self.recording_saver.stop_and_save(app, recording_duration).await {

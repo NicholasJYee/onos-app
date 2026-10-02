@@ -23,4 +23,4 @@ pub use macos::configure_macos_audio;
 pub use linux::configure_linux_audio;
 
 #[cfg(target_os = "ios")]
-pub use ios::configure_ios_audio;
+pub use ios::{activate_audio_session, configure_ios_audio, deactivate_audio_session};

@@ -212,6 +212,10 @@ llama-helper = { path = "../../llama-helper", package = "llama-helper", default-
 # models that are not shipped yet.
 whisper-rs = { version = "0.13.2", features = ["raw-api", "metal"] }
 futures-channel = "0.3.31"
+# Objective-C runtime, used to configure AVAudioSession. iOS refuses microphone
+# input unless the session category is set to record/playAndRecord and the
+# session is activated; there is no cpal API for this.
+objc = "0.2.7"
 
 
 [dev-dependencies]

@@ -23,6 +23,11 @@ interface TranscriptPanelProps {
   totalCount?: number;
   loadedCount?: number;
   onLoadMore?: () => void;
+  /**
+   * Phone-width only: whether this panel is the selected tab. Desktop always
+   * shows both panels side by side, so this has no effect at `md` and above.
+   */
+  mobileVisible?: boolean;
 }
 
 export function TranscriptPanel({
@@ -33,6 +38,7 @@ export function TranscriptPanel({
   onOpenMeetingFolder,
   isRecording,
   disableAutoScroll = false,
+  mobileVisible = false,
   usePagination = false,
   segments,
   hasMore,
@@ -57,7 +63,7 @@ export function TranscriptPanel({
   }, [transcripts, usePagination, segments]);
 
   return (
-    <div className="hidden md:flex md:w-1/4 lg:w-1/3 min-w-0 border-r border-gray-200 bg-white flex-col relative shrink-0">
+    <div className={`${mobileVisible ? 'flex w-full' : 'hidden'} md:flex md:w-1/4 lg:w-1/3 min-w-0 border-r border-gray-200 bg-white flex-col relative shrink-0`}>
       {/* Title area */}
       <div className="p-4 border-b border-gray-200">
         <TranscriptButtonGroup

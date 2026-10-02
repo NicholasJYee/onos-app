@@ -47,6 +47,11 @@ interface SummaryPanelProps {
   onTemplateSelect: (templateId: string, templateName: string) => void;
   isModelConfigLoading?: boolean;
   onOpenModelSettings?: (openFn: () => void) => void;
+  /**
+   * Phone-width only: whether this panel is the selected tab. Desktop always
+   * shows both panels side by side, so this has no effect at `md` and above.
+   */
+  mobileVisible?: boolean;
 }
 
 export function SummaryPanel({
@@ -82,12 +87,13 @@ export function SummaryPanel({
   selectedTemplate,
   onTemplateSelect,
   isModelConfigLoading = false,
-  onOpenModelSettings
+  onOpenModelSettings,
+  mobileVisible = true
 }: SummaryPanelProps) {
   const isSummaryLoading = summaryStatus === 'processing' || summaryStatus === 'summarizing' || summaryStatus === 'regenerating';
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col bg-white overflow-hidden">
+    <div className={`${mobileVisible ? 'flex' : 'hidden'} md:flex flex-1 min-w-0 flex-col bg-white overflow-hidden`}>
       {/* Title area */}
       <div className="p-4 border-b border-gray-200">
         {/* <EditableTitle
@@ -241,7 +247,7 @@ export function SummaryPanel({
               ) : null}
             </div>
           )}
-          <div className="p-6 w-full">
+          <div className="p-2 md:p-6 w-full">
             <BlockNoteSummaryView
               ref={summaryRef}
               summaryData={aiSummary}

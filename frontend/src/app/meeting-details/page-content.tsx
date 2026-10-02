@@ -53,6 +53,9 @@ export default function PageContent({
   // State
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [isRecording] = useState(false);
+  // Phone-width only: which panel the view switcher below is showing. The two
+  // panels sit side by side from `md` up, where this is ignored.
+  const [mobileView, setMobileView] = useState<'summary' | 'transcript'>('summary');
   const [summaryResponse] = useState<SummaryResponse | null>(null);
 
   // Ref to store the modal open function from SummaryGeneratorButtonGroup
@@ -162,8 +165,29 @@ export default function PageContent({
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="flex flex-col h-screen bg-gray-50"
     >
+      {/* Phone-only view switcher. There is no room for two panels side by
+          side on a phone, so one shows at a time; the summary is the default.
+          Hidden from `md` up, where the side-by-side layout is unchanged. */}
+      <div className="md:hidden flex shrink-0 border-b border-gray-200 bg-white">
+        {([['summary', 'Summary'], ['transcript', 'Transcript']] as const).map(([view, label]) => (
+          <button
+            key={view}
+            type="button"
+            onClick={() => setMobileView(view)}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              mobileView === view
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-600 border-b-2 border-transparent'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
         <TranscriptPanel
+          mobileVisible={mobileView === 'transcript'}
           transcripts={meetingData.transcripts}
           customPrompt={customPrompt}
           onPromptChange={setCustomPrompt}
@@ -181,6 +205,7 @@ export default function PageContent({
           onLoadMore={onLoadMore}
         />
         <SummaryPanel
+          mobileVisible={mobileView === 'summary'}
           meeting={meeting}
           meetingTitle={meetingData.meetingTitle}
           onTitleChange={meetingData.handleTitleChange}

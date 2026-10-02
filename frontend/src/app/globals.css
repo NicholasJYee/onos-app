@@ -221,4 +221,13 @@
   [data-node-type] {
     overflow: visible !important;
   }
+
+  /* Phones: BlockNote reserves 54px of side padding for its drag handles, which
+     on a ~390px screen leaves the note squeezed into the middle third. Claw it
+     back below the `md` breakpoint; desktop keeps the roomier default. */
+  @media (max-width: 767px) {
+    .bn-editor {
+      padding-inline: 10px !important;
+    }
+  }
 }

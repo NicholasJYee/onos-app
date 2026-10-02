@@ -149,24 +149,10 @@ export function useCopyOperations({
         return;
       }
 
-      // Build metadata header
-      const header = `# Meeting Summary: ${meetingTitle}\n\n`;
-      const metadata = `**Meeting ID:** ${meeting.id}\n**Date:** ${new Date(meeting.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}\n**Copied on:** ${new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}\n\n---\n\n`;
-
-      const fullMarkdown = header + metadata + summaryMarkdown;
-      await navigator.clipboard.writeText(fullMarkdown);
+      // Clipboard gets the summary text only. It previously carried a
+      // "# Meeting Summary / Meeting ID / Date / Copied on" block, which came
+      // along every time the summary was pasted somewhere else.
+      await navigator.clipboard.writeText(summaryMarkdown);
 
       console.log('✅ Successfully copied to clipboard!');
       toast.success("Summary copied to clipboard");
@@ -175,7 +161,7 @@ export function useCopyOperations({
       console.error('❌ Failed to copy summary:', error);
       toast.error("Failed to copy summary");
     }
-  }, [aiSummary, meetingTitle, meeting, blockNoteSummaryRef]);
+  }, [aiSummary, blockNoteSummaryRef]);
 
   return {
     handleCopyTranscript,

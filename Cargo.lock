@@ -6705,6 +6705,7 @@ dependencies = [
  "plist",
  "raw-window-handle",
  "reqwest 0.13.2",
+ "rustls 0.23.36",
  "serde",
  "serde_json",
  "serde_repr",

@@ -198,6 +198,15 @@ futures-channel = "0.3.31"
 
 # iOS-specific dependencies
 [target.'cfg(target_os = "ios")'.dependencies]
+# `rustls-tls` is required, not optional. On iOS (and only iOS/Android) tauri
+# depends on reqwest for the dev-mode asset proxy in protocol/tauri.rs, and
+# tauri-plugin-updater's default features turn on `reqwest/rustls-no-provider`
+# — rustls with no crypto provider. Feature unification applies that to the
+# reqwest instance tauri uses, and the code that installs ring as the
+# process-level provider is gated behind this feature. Without it,
+# reqwest's `default_rustls_crypto_provider()` is just `panic!("No provider
+# set")`, so the app aborts the moment the webview requests its first asset.
+tauri = { version = "2", features = ["macos-private-api", "protocol-asset", "rustls-tls"] }
 llama-helper = { path = "../../llama-helper", package = "llama-helper", default-features = false, features = ["metal"] }
 # Metal, as on macOS. Without it Whisper runs CPU-only, which is painful on a
 # phone. CoreML is deliberately omitted: it needs separately converted encoder

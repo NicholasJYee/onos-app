@@ -19,6 +19,24 @@
 # the version users see -- is deliberately left alone; many builds per version
 # is normal.
 #
+# Signing: xcodebuild is run from a terminal here, not from the Xcode GUI, so it
+# cannot always reach the interactive developer-portal session. When it cannot,
+# it fails with "Cloud signing permission error" and "No profiles for
+# '<bundle id>' were found" even though the account is an Admin and the
+# distribution certificate exists.
+#
+# The fix is an App Store Connect API key. Tauri forwards it to xcodebuild as
+# authentication credentials when all three of these are set:
+#
+#   APPLE_API_KEY       the Key ID, e.g. A1B2C3D4E5
+#   APPLE_API_ISSUER    the Issuer ID (a UUID, shown above the key list)
+#   APPLE_API_KEY_PATH  path to the downloaded AuthKey_<KEYID>.p8
+#
+# Create one at App Store Connect > Users and Access > Integrations > App Store
+# Connect API, with the "App Manager" role. The .p8 downloads once and cannot be
+# downloaded again, so keep it somewhere safe and out of this repo. The same key
+# also works for uploading with `xcrun altool`.
+#
 # Run from anywhere; paths are resolved relative to the repo.
 
 set -euo pipefail
@@ -31,6 +49,21 @@ project_yml="$frontend/src-tauri/gen/apple/project.yml"
 if [ ! -f "$info_plist" ]; then
     echo "error: $info_plist not found" >&2
     exit 1
+fi
+
+# Report which signing route this run will take, since the failure mode when
+# credentials are missing is an opaque permissions error much later.
+if [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_ISSUER:-}" ] && [ -n "${APPLE_API_KEY_PATH:-}" ]; then
+    if [ ! -f "$APPLE_API_KEY_PATH" ]; then
+        echo "error: APPLE_API_KEY_PATH is set but no file at $APPLE_API_KEY_PATH" >&2
+        exit 1
+    fi
+    echo "==> Signing with App Store Connect API key ${APPLE_API_KEY}"
+else
+    echo "==> No App Store Connect API key set; relying on Xcode's signing session."
+    echo "    If this fails with \"Cloud signing permission error\" or \"No profiles"
+    echo "    for 'com.onos.ai' were found\", set APPLE_API_KEY, APPLE_API_ISSUER and"
+    echo "    APPLE_API_KEY_PATH (see the comments at the top of this script)."
 fi
 
 build_number="$(date -u +%Y%m%d%H%M)"
